@@ -1,3 +1,9 @@
+"""
+Has the built-in activation functions,
+code for using them,
+and code for adding new user-defined ones
+"""
+
 import math
 import types
 

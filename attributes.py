@@ -1,7 +1,7 @@
 """Deals with the attributes (variable parameters) of genes"""
 from random import choice, gauss, random, uniform
 
-from neat.config import ConfigParameter
+from config import ConfigParameter
 
 
 # TODO: There is probably a lot of room for simplification of these classes using metaprogramming.

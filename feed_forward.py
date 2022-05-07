@@ -1,5 +1,6 @@
 from graphs import feed_forward_layers
 
+
 class FeedForwardNetwork(object):
     def __init__(self, inputs, outputs, node_evals):
         self.input_nodes = inputs

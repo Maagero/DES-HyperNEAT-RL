@@ -23,6 +23,7 @@
 from __future__ import print_function
 
 import copy
+from math import radians
 from turtle import width
 import warnings
 import random
@@ -35,8 +36,8 @@ import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import numpy as np
 
-import geometry
-import agent
+import geometry as geometry
+import agent as agent
 import maze_environment as maze
 
 def plot_stats(statistics, ylog=False, view=False, filename='avg_fitness.svg'):
@@ -279,6 +280,10 @@ def _draw_maze_(maze_env, ax):
         line = plt.Line2D((wall.a.x, wall.b.x), (wall.a.y, wall.b.y), lw=1.5)
         ax.add_line(line)
 
+    for waypoint in maze_env.waypoints:
+        line = plt.Line2D((waypoint.a.x, waypoint.b.x),(waypoint.a.y, waypoint.b.y), lw=1.5, color='g')
+        ax.add_line(line)
+
     # draw start point
     start_circle = plt.Circle((maze_env.agent.location.x, maze_env.agent.location.y), 
                                 radius=2.5, facecolor=(0.6, 1.0, 0.6), edgecolor='w')
@@ -292,7 +297,11 @@ def _draw_maze_(maze_env, ax):
 
 
 if __name__=='__main__':
-    maze_env = maze.read_environment('easy_maze.txt')
+    parser = argparse.ArgumentParser(description="The maze experiment visulizer.")
+    parser.add_argument('-m', '--maze', default='medium', 
+                        help='The maze configuration to use.')
+    args = parser.parse_args()
+    maze_env = maze.read_environment('maze/%s_maze.txt' % args.maze)
     fig = plt.figure()
     fig.set_dpi(100)
     fig_height = 7

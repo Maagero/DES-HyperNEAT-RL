@@ -2,7 +2,7 @@
 import sys
 
 from config import ConfigParameter, DefaultClassConfig
-from neat.math_util import stat_functions
+from math_util import stat_functions
 
 
 # TODO: Add a method for the user to change the "is stagnant" computation.

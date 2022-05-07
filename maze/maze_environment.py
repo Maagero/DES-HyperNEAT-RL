@@ -6,8 +6,8 @@
 #
 import math
 
-import agent
-import geometry
+import agent as agent
+import geometry as geometry
 
 # The maximal allowed speed for the maze solver agent
 MAX_AGENT_SPEED = 3.0
@@ -16,7 +16,7 @@ class MazeEnvironment:
     """
     This class encapsulates the maze simulation environment.
     """
-    def __init__(self, agent, walls, exit_point, exit_range=5.0):
+    def __init__(self, agent, walls, exit_point, waypoints, exit_range=5.0):
         """
         Creates new maze environment with specified walls and exit point.
         Arguments:
@@ -28,6 +28,8 @@ class MazeEnvironment:
         self.walls = walls
         self.exit_point = exit_point
         self.exit_range = exit_range
+        self.waypoints = waypoints
+        self.num_waypoints = len(waypoints)
         # The maze navigating agent
         self.agent = agent
         # The flag to indicate if exit was found
@@ -46,6 +48,19 @@ class MazeEnvironment:
             The distance from maze solver agent to the maze exit.
         """
         return self.agent.location.distance(self.exit_point)
+
+    def agent_distance_to_waypoint(self, waypoint):
+        return waypoint.distance(self.agent.location)
+
+    def test_passed_waypoint(self, loc):
+        if self.waypoints:
+            w = self.waypoints[0]
+            if w.distance(loc) < self.agent.radius:
+                self.waypoints.remove(w)
+                if self.waypoints:
+                    self.initial_distance = self.waypoints[0].distance(loc)
+                else:
+                    self.initial_distance = self.agent_distance_to_exit()
 
     def test_wall_collision(self, loc):
         """
@@ -203,6 +218,11 @@ class MazeEnvironment:
         # check if agent reached exit point
         distance = self.agent_distance_to_exit()
         self.exit_found = (distance < self.exit_range)
+
+        # check if passing a waypoint
+
+        self.test_passed_waypoint(self.agent.location)
+
         return self.exit_found
 
     def __str__(self):
@@ -226,8 +246,9 @@ def read_environment(file_path):
     Returns:
         The initialized maze environment.
     """
-    num_lines, index = -1, 0
+    num_lines, index, num_waypoints = -1, 0, -1
     walls = []
+    waypoints = []
     maze_agent, maze_exit = None, None
     with open(file_path, 'r') as file:
         for line in file.readlines():
@@ -249,19 +270,23 @@ def read_environment(file_path):
             elif index == 3:
                 # read the maze exit location
                 maze_exit = geometry.read_point(line)
-            else:
+            elif index <= 3 + num_lines:
                 # read the walls
                 wall = geometry.read_line(line)
                 walls.append(wall)
-
+            elif index == 4 + num_lines:
+                num_waypoints = int(line)
+            else:
+                waypoint = geometry.read_line(line)
+                waypoints.append(waypoint)
             # increment cursor
             index += 1
-
     assert len(walls) == num_lines
+    assert len(waypoints) == num_waypoints
 
     print("Maze environment configured successfully from the file: %s" % file_path)
     # create and return the maze environment
-    return MazeEnvironment(agent=maze_agent, walls=walls, exit_point=maze_exit)
+    return MazeEnvironment(agent=maze_agent, walls=walls, exit_point=maze_exit, waypoints=waypoints)
 
 def maze_simulation_evaluate(env, net, time_steps):
     """
@@ -276,15 +301,18 @@ def maze_simulation_evaluate(env, net, time_steps):
     for i in range(time_steps):
         if maze_simulation_step(env, net):
             print("Maze solved in %d steps" % (i + 1))
-            return 1.0
+            return 10.0
         
     # Calculate the fitness score based on distance from exit
-    fitness = env.agent_distance_to_exit()
+    if env.waypoints:
+        fitness = env.agent_distance_to_waypoint(env.waypoints[0])
+    else:
+        fitness = env.agent_distance_to_exit()
     # Normalize fitness score to range (0,1]
     fitness = (env.initial_distance - fitness) / env.initial_distance
     if fitness <= 0.01:
         fitness = 0.01
-
+    fitness = (fitness + (env.num_waypoints - len(env.waypoints)))
     return fitness
 
 

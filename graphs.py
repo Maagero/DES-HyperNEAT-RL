@@ -1,3 +1,6 @@
+"""Directed graph algorithm implementations."""
+
+
 def creates_cycle(connections, test):
     """
     Returns true if the addition of the 'test' connection would create a cycle,
@@ -30,6 +33,7 @@ def required_for_output(inputs, outputs, connections):
     :param connections: list of (input, output) connections in the network.
     NOTE: It is assumed that the input identifier set and the node identifier set are disjoint.
     By convention, the output node ids are always the same as the output index.
+
     Returns a set of identifiers of required nodes.
     """
 
@@ -51,12 +55,14 @@ def required_for_output(inputs, outputs, connections):
 
     return required
 
+
 def feed_forward_layers(inputs, outputs, connections):
     """
     Collect the layers whose members can be evaluated in parallel in a feed-forward network.
     :param inputs: list of the network input nodes
     :param outputs: list of the output node identifiers
     :param connections: list of (input, output) connections in the network.
+
     Returns a list of layers, with each layer consisting of a set of node identifiers.
     Note that the returned layers do not contain nodes whose output is ultimately
     never used to compute the final network output.
