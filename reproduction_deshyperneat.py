@@ -34,7 +34,7 @@ class DefaultReproduction(DefaultClassConfig):
         # pylint: disable=super-init-not-called
         self.reproduction_config = config
         self.reporters = reporters
-        # self.genome_indexer = count(1)
+        #self.genome_indexer = count(1)
         self.layout_indexer = count(1)
         self.stagnation = stagnation
         self.ancestors = {}
@@ -105,7 +105,6 @@ class DefaultReproduction(DefaultClassConfig):
                 remaining_species.append(stag_s)
         # The above comment was not quite what was happening - now getting fitnesses
         # only from members of non-stagnated species.
-
         # No species left.
         if not remaining_species:
             species.species = {}
@@ -159,6 +158,7 @@ class DefaultReproduction(DefaultClassConfig):
                 for i, m in old_members[:self.reproduction_config.elitism]:
                     new_population[i] = m
                     spawn -= 1
+                
 
             if spawn <= 0:
                 continue
@@ -179,12 +179,12 @@ class DefaultReproduction(DefaultClassConfig):
 
                 # Note that if the parents are not distinct, crossover will produce a
                 # genetically identical clone of the parent (but with a different ID).
-                gid = next(self.genome_indexer)
-                child = config.genome_type(gid)
-                child.configure_crossover(parent1, parent2, config.genome_config)
-                child.mutate(config.genome_config)
+                lid = next(self.layout_indexer)
+                child = config.layout_type(lid)
+                child.configure_crossover(parent1, parent2, config.layout_config)
+                child.mutate(config.layout_config)
                 # TODO: if config.genome_config.feed_forward, no cycles should exist
-                new_population[gid] = child
-                self.ancestors[gid] = (parent1_id, parent2_id)
+                new_population[lid] = child
+                self.ancestors[lid] = (parent1_id, parent2_id)
 
         return new_population

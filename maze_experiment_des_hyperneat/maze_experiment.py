@@ -20,27 +20,25 @@ sys.path.insert(1, '/Users/maagero/src/deshyperneatrl/')
 
 import config
 import genome
-import reproduction
+import reproduction_deshyperneat
 import species
 import stagnation
 import feed_forward
-import population
+import population_deshyperneat
 import statistics
+import layout
 import reporting
 from visualize_cppn import draw_net
 from substrate import Substrate
 from hyperneat import create_phenotype_network
-from es_hyperneat import ESNetwork
+from des_hyperneat import DESNetwork
 
-VERSION = "M"
+VERSION = "L"
 VERSION_TEXT = "small" if VERSION == "S" else "medium" if VERSION == "M" else "large"
 
 # Network inputs and expected outputs.
-INPUT_COORDINATES = [(i/5-1, -1) for i in range(10)]
-OUTPUT_COORDINATES = [(-0.5, 1.0), (0.5, 1.0)]
-
-SUBSTRATE = Substrate(
-    INPUT_COORDINATES, OUTPUT_COORDINATES)
+INPUT_SUBSTRATES = [[(i/5-1, 0) for i in range(6)], [(i/5-1, 0) for i in range(4)]]
+OUTPUT_SUBSTRATES = [[(-0.5, 1.0), (0.5, 1.0)]]
 
 def params(version):
     """
@@ -51,7 +49,7 @@ def params(version):
             "variance_threshold": 0.03,
             "band_threshold": 0.3,
             "iteration_level": 1,
-            "division_threshold": 0.5,
+            "division_threshold": 0.03,
             "max_weight": 5.0,
             "activation": "sigmoid"}
 
@@ -100,8 +98,8 @@ def eval_fitness(genome_id, genome, config, time_steps=400):
     """
     # run the simulation
     maze_env = copy.deepcopy(trialSim.orig_maze_environment)
-    cppn = feed_forward.FeedForwardNetwork.create(genome, config)
-    network = ESNetwork(SUBSTRATE, cppn, DYNAMIC_PARAMS)
+    #cppn = feed_forward.FeedForwardNetwork.create(genome, config)
+    network = DESNetwork(INPUT_SUBSTRATES, OUTPUT_SUBSTRATES, genome, DYNAMIC_PARAMS, config)
     control_net = network.create_phenotype_network()
     fitness = maze.maze_simulation_evaluate(
                                         env=maze_env, 
@@ -138,15 +136,15 @@ def eval_genomes(genomes, config):
 
 def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generations=100, silent=False):
 
-    seed = 11111
-    random.seed()
+    seed = 3213
+    random.seed(seed)
 
     # Config for CPPN.
-    CONFIG = config.Config(genome.DefaultGenome, reproduction.DefaultReproduction,
+    CONFIG = config.Config(genome.DefaultGenome, reproduction_deshyperneat.DefaultReproduction,
                                 species.DefaultSpeciesSet, stagnation.DefaultStagnation,
-                                config_file)
+                                config_file, layout_type=layout.Layout)
 
-    pop = population.Population(CONFIG)
+    pop = population_deshyperneat.Population(CONFIG)
 
     # Create the trial simulation
     global trialSim
@@ -163,14 +161,12 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
 
     # Verify network output against training data.
     print('\nOutput:')
-    cppn = feed_forward.FeedForwardNetwork.create(best_genome, CONFIG)
-    network = ESNetwork(SUBSTRATE, cppn, DYNAMIC_PARAMS)
+    network = DESNetwork(INPUT_SUBSTRATES, OUTPUT_SUBSTRATES, best_genome, DYNAMIC_PARAMS, CONFIG)
     winner_net = network.create_phenotype_network()
 
     # Save CPPN if wished reused and draw it to file along with the winner.
-    with open(out_dir, 'wb') as output:
-        pickle.dump(cppn, output, pickle.HIGHEST_PROTOCOL)
-    draw_net(cppn, filename=out_dir)
+    '''with open(out_dir, 'wb') as output:
+        pickle.dump(network, output, pickle.HIGHEST_PROTOCOL)'''
     draw_net(winner_net, filename=out_dir)
 
     return best_genome, stats, CONFIG

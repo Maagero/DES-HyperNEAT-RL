@@ -93,18 +93,25 @@ def find_neurons(cppn, coord, nodes, start_idx, outgoing, max_weight=5.0):
     return im
 
 
-def query_cppn(coord1, coord2, outgoing, cppn, max_weight=5.0):
+def query_cppn(coord1, coord2, outgoing, cppn, max_weight=5.0, bias = True, leo = False):
     """
     Get the weight from one point to another using the CPPN.
     Takes into consideration which point is source/target.
     """
-
-    if outgoing:
-        i = [coord1[0], coord1[1], coord2[0], coord2[1], 1.0]
+    if bias:
+        if outgoing:
+            i = [coord1[0], coord1[1], coord2[0], coord2[1], 1.0]
+        else:
+            i = [coord2[0], coord2[1], coord1[0], coord1[1], 1.0]
     else:
-        i = [coord2[0], coord2[1], coord1[0], coord1[1], 1.0]
+        if outgoing:
+            i = [coord1[0], coord1[1], coord2[0], coord2[1]]
+        else:
+            i = [coord2[0], coord2[1], coord1[0], coord1[1]]
     w = cppn.activate(i)[0]
-    if abs(w) > 0.2:  # If abs(weight) is below threshold, treat weight as 0.0.
+    if leo:
+        l = cppn.activate(i)[-1]
+    if abs(w) > 0.2 and (not leo or l>0.0):  # If abs(weight) is below threshold, treat weight as 0.0.
         if w > 0:
             w = (w - 0.2) / 0.8
         else:
@@ -112,3 +119,31 @@ def query_cppn(coord1, coord2, outgoing, cppn, max_weight=5.0):
         return w * max_weight
     else:
         return 0.0
+
+def query_cppn_bias(coord1, coord2, outgoing, cppn, bias = True):
+    """
+    Get the bias from one point to another using the CPPN.
+    Takes into consideration which point is source/target.
+    """
+    if bias:
+        if outgoing:
+            i = [coord1[0], coord1[1], coord2[0], coord2[1], 1.0]
+        else:
+            i = [coord2[0], coord2[1], coord1[0], coord1[1], 1.0]
+    else:
+        if outgoing:
+            i = [coord1[0], coord1[1], coord2[0], coord2[1]]
+        else:
+            i = [coord2[0], coord2[1], coord1[0], coord1[1]]
+    b = cppn.activate(i)[1]
+    return b
+
+def get_cppn_bias(coord, cppn, bias = True):
+    if bias:
+        i = [coord[0], coord[1], 0.0, 0.0, 0.0]
+    else:
+        i = [coord[0], coord[1], 0.0, 0.0]
+
+    b = cppn.activate(i)[0]
+    return b
+

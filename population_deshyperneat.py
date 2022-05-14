@@ -38,7 +38,7 @@ class Population(object):
                 "Unexpected fitness_criterion: {0!r}".format(config.fitness_criterion))
 
         # Create a population from scratch, then partition into species.
-        self.population = self.reproduction.create_new(config.layout,
+        self.population = self.reproduction.create_new(config.layout_type,
                                                         config.layout_config,
                                                         config.pop_size)
         self.species = config.species_set_type(config.species_set_config, self.reporters)
@@ -98,6 +98,7 @@ class Population(object):
             # Track the best genome ever seen.
             if self.best_genome is None or best.fitness > self.best_genome.fitness:
                 self.best_genome = best
+                
 
             if not self.config.no_fitness_termination:
                 # End if the fitness threshold is reached.

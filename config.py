@@ -3,6 +3,7 @@
 import os
 import warnings
 from configparser import ConfigParser
+from itertools import count
 
 
 class ConfigParameter(object):
@@ -132,7 +133,7 @@ class Config(object):
                 ConfigParameter('reset_on_extinction', bool),
                 ConfigParameter('no_fitness_termination', bool, False)]
 
-    def __init__(self, genome_type, reproduction_type, species_set_type, stagnation_type, filename):
+    def __init__(self, genome_type, reproduction_type, species_set_type, stagnation_type, filename, layout_type=None):
         # Check that the provided types have the required methods.
         assert hasattr(genome_type, 'parse_config')
         assert hasattr(reproduction_type, 'parse_config')
@@ -143,6 +144,7 @@ class Config(object):
         self.reproduction_type = reproduction_type
         self.species_set_type = species_set_type
         self.stagnation_type = stagnation_type
+        self.layout_type = layout_type
 
         if not os.path.isfile(filename):
             raise Exception('No such config file: ' + os.path.abspath(filename))
@@ -189,8 +191,13 @@ class Config(object):
         stagnation_dict = dict(parameters.items(stagnation_type.__name__))
         self.stagnation_config = stagnation_type.parse_config(stagnation_dict)
 
+        # TODO Change this when using des-hyperneat
         reproduction_dict = dict(parameters.items(reproduction_type.__name__))
         self.reproduction_config = reproduction_type.parse_config(reproduction_dict)
+
+        if self.layout_type:
+            layout_dict = dict(parameters.items(layout_type.__name__))
+            self.layout_config = layout_type.parse_config(layout_dict, self.genome_config)
 
     def save(self, filename):
         with open(filename, 'w') as f:

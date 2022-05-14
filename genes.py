@@ -97,6 +97,9 @@ class DefaultNodeGene(BaseGene):
             d += 1.0
         return d * config.compatibility_weight_coefficient
 
+    def set_activition(self):
+        self.activation = 'gauss'
+
 
 # TODO: Do an ablation study to determine whether the enabled setting is
 # important--presumably mutations that set the weight to near zero could

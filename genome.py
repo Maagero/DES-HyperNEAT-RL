@@ -36,7 +36,8 @@ class DefaultGenomeConfig(object):
                         ConfigParameter('node_delete_prob', float),
                         ConfigParameter('single_structural_mutation', bool, 'false'),
                         ConfigParameter('structural_mutation_surer', str, 'default'),
-                        ConfigParameter('initial_connection', str, 'unconnected')]
+                        ConfigParameter('initial_connection', str, 'unconnected'),
+                        ConfigParameter('add_seeding', bool)]
 
         # Gather configuration data from the gene classes.
         self.node_gene_type = params['node_gene_type']
@@ -231,9 +232,32 @@ class DefaultGenome(object):
                         sep='\n', file=sys.stderr)
                 self.connect_partial_nodirect(config)
 
+        # Add gaussian seed if chosen
+        if config.add_seeding:
+            x_node = self.create_node(config, config.num_outputs)
+            y_node = self.create_node(config, config.num_outputs +1)
+
+            x_node.set_activition()
+            y_node.set_activition()
+
+            self.nodes[x_node.key] = x_node
+            self.nodes[y_node.key] = y_node
+
+            self.add_connection(config, config.input_keys[0], x_node.key, 0.33, True)
+            self.add_connection(config, config.input_keys[2], x_node.key, 0.33, True)
+            self.add_connection(config, config.input_keys[1], y_node.key, 0.33, True)
+            self.add_connection(config, config.input_keys[3], y_node.key, 0.33, True)
+            if config.num_inputs == 5:
+                self.add_connection(config, config.input_keys[4], y_node.key, 0.33, True)
+            for key in config.output_keys:
+                self.add_connection(config, x_node.key, key, 0.33, True)
+                self.add_connection(config, y_node.key, key, 0.33, True)
+
+
+
     def configure_crossover(self, genome1, genome2, config):
         """ Configure a new genome by crossover from two parent genomes. """
-        if genome1.fitness > genome2.fitness:
+        if genome1.fitness != None and genome1.fitness > genome2.fitness:
             parent1, parent2 = genome1, genome2
         else:
             parent1, parent2 = genome2, genome1
