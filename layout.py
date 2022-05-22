@@ -18,6 +18,8 @@ class LayoutConfig:
         #TODO add all layout params here for
         self._params = [ConfigParameter('prob_add_substrate', float),
                         ConfigParameter('prob_add_path', float),
+                        ConfigParameter('prob_delete_substrate', float),
+                        ConfigParameter('prob_delete_path', float),
                         ConfigParameter('num_input_substrates', int),
                         ConfigParameter('num_output_substrates', int),
                         ConfigParameter('enabled_mutate_rate', float),
@@ -144,7 +146,10 @@ class Layout:
             self.mutate_add_path(config)
         if random() <=config.prob_add_substrate:
             self.mutate_add_substrate(config)
-    
+        if random() <= config.prob_delete_path:
+            self.mutate_delete_path()
+        if random() <= config.prob_delete_substrate:
+            self.mutate_delete_substrate(config)
 
         #Mutate the CPPNs
         for sg in self.substrates.values():
@@ -211,6 +216,33 @@ class Layout:
         i, o = path_to_split.key
         self.add_path(config, i, new_substrate_id, True)
         self.add_path(config, new_substrate_id, o, True)
+
+
+    def mutate_delete_substrate(self, config):
+        available_nodes = list(self.substrates.keys())
+        if not self.substrates:
+            return -1
+
+        del_key = choice(available_nodes)
+
+        paths_to_del = set()
+
+        for k, v in self.paths.items():
+            if del_key in v.key:
+                paths_to_del.add(v.key)
+        
+        for key in paths_to_del:
+            del self.paths[key]
+
+        del self.substrates[del_key]
+
+        return del_key
+
+
+    def mutate_delete_path(self):
+        if self.paths:
+            key = choice(list(self.paths.keys()))
+            del self.paths[key]
 
 
     def distance(self, other, config):

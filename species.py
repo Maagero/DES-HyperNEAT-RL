@@ -63,7 +63,7 @@ class DefaultSpeciesSet(DefaultClassConfig):
         return DefaultClassConfig(param_dict,
                                   [ConfigParameter('compatibility_threshold', float)])
 
-    def speciate(self, config, population, generation):
+    def speciate(self, config, population, generation, stats= None):
         """
         Place genomes into species by genetic similarity.
 
@@ -140,7 +140,8 @@ class DefaultSpeciesSet(DefaultClassConfig):
             gdstdev = stdev(distances.distances.values())
             self.reporters.info(
                 'Mean genetic distance {0:.3f}, standard deviation {1:.3f}'.format(gdmean, gdstdev))
-
+            if stats:
+                stats.species_save(generation, gdmean, gdstdev)
     def get_species_id(self, individual_id):
         return self.genome_to_species[individual_id]
 

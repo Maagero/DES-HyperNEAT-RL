@@ -6,7 +6,7 @@ from multiprocessing import Pool
 
 
 class ParallelEvaluator(object):
-    def __init__(self, num_workers, eval_function, timeout=None, maxtasksperchild=None):
+    def __init__(self, num_workers, eval_function, trialSim, timeout=None, maxtasksperchild=None):
         """
         eval_function should take one argument, a tuple of (genome object, config object),
         and return a single float (the genome's fitness).
@@ -14,6 +14,7 @@ class ParallelEvaluator(object):
         self.eval_function = eval_function
         self.timeout = timeout
         self.pool = Pool(processes=num_workers, maxtasksperchild=maxtasksperchild)
+        self.trailSim = trialSim
 
     def __del__(self):
         self.pool.close()
@@ -23,7 +24,7 @@ class ParallelEvaluator(object):
     def evaluate(self, genomes, config):
         jobs = []
         for ignored_genome_id, genome in genomes:
-            jobs.append(self.pool.apply_async(self.eval_function, (genome, config)))
+            jobs.append(self.pool.apply_async(self.eval_function, (genome, config, self.trailSim)))
 
         # assign the fitness back to each genome
         for job, (ignored_genome_id, genome) in zip(jobs, genomes):

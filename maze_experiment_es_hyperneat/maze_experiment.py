@@ -36,7 +36,7 @@ VERSION = "M"
 VERSION_TEXT = "small" if VERSION == "S" else "medium" if VERSION == "M" else "large"
 
 # Network inputs and expected outputs.
-INPUT_COORDINATES = [(i/5-1, -1) for i in range(10)]
+INPUT_COORDINATES = [(-1, 0), (-7/9, 0), (-5/5,0), (-3/9,0), (-1/9,0), (1/9,0), (3/9, 0), (5/9, 0), (7/9,0), (1,0)]
 OUTPUT_COORDINATES = [(-0.5, 1.0), (0.5, 1.0)]
 
 SUBSTRATE = Substrate(

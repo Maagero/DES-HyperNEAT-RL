@@ -4,7 +4,7 @@ class Agent:
     """
     This is the maze navigating agent
     """
-    def __init__(self, location, heading=0, speed=0, angular_vel=0, radius=8.0, range_finder_range=100.0):
+    def __init__(self, location, heading=0, speed=0, angular_vel=0, radius=2.0, range_finder_range=100.0):
         """
         Creates new Agent with specified parameters.
         Arguments:

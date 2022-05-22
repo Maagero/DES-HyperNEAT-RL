@@ -55,7 +55,7 @@ class MazeEnvironment:
     def test_passed_waypoint(self, loc):
         if self.waypoints:
             w = self.waypoints[0]
-            if w.distance(loc) < self.agent.radius:
+            if w.distance(loc) < 10:
                 self.waypoints.remove(w)
                 if self.waypoints:
                     self.initial_distance = self.waypoints[0].distance(loc)
@@ -277,7 +277,7 @@ def read_environment(file_path):
             elif index == 4 + num_lines:
                 num_waypoints = int(line)
             else:
-                waypoint = geometry.read_line(line)
+                waypoint = geometry.read_point(line)
                 waypoints.append(waypoint)
             # increment cursor
             index += 1
@@ -331,3 +331,16 @@ def maze_simulation_step(env, net):
     output = net.activate(inputs)
     # apply control signal to the environment and update
     return env.update(output)
+
+
+def maze_simulate_pathing(env, net, time_steps):
+    positions = []
+    for i in range(time_steps):
+        positions.append(env.agent.location)
+        if maze_simulation_step(env, net):
+            print('Goal reached!')
+            break
+
+    return positions
+
+    

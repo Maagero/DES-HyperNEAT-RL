@@ -281,8 +281,8 @@ def _draw_maze_(maze_env, ax):
         ax.add_line(line)
 
     for waypoint in maze_env.waypoints:
-        line = plt.Line2D((waypoint.a.x, waypoint.b.x),(waypoint.a.y, waypoint.b.y), lw=1.5, color='g')
-        ax.add_line(line)
+        line = plt.Circle((waypoint.x, waypoint.y), facecolor=(0.0, 1.0, 0.5), edgecolor='g')
+        ax.add_patch(line)
 
     # draw start point
     start_circle = plt.Circle((maze_env.agent.location.x, maze_env.agent.location.y), 
@@ -295,6 +295,19 @@ def _draw_maze_(maze_env, ax):
     ax.add_patch(exit_circle)
  
 
+def show_path(maze_env, positions):
+    fig = plt.figure()
+    fig.set_dpi(100)
+    ax = fig.subplots(1, 1, sharex=True)
+    ax.set_xlim(0, 210)
+    ax.set_ylim(0, 210)
+    _draw_maze_(maze_env, ax)
+    for pos in positions:
+        point = plt.Circle((pos.x, pos.y), radius=1, facecolor=(0.0, 0.0, 0.0))
+        ax.add_patch(point)
+    plt.gca().invert_yaxis()
+    plt.show()
+
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description="The maze experiment visulizer.")
@@ -305,14 +318,13 @@ if __name__=='__main__':
     fig = plt.figure()
     fig.set_dpi(100)
     fig_height = 7
-    width = 300
-    height = 300
+    width = 210
+    height = 210
     fig_width = fig_height * (float(width)/float(2.0 * height )) - 0.2
     print("Plot figure width: %.1f, height: %.1f" % (fig_width, fig_height))
-    fig.set_size_inches(fig_width, fig_height)
     ax = fig.subplots(1, 1, sharex=True)
     ax.set_xlim(0, width)
     ax.set_ylim(0, height)
-
+    plt.gca().invert_yaxis()
     _draw_maze_(maze_env, ax)
     plt.show()

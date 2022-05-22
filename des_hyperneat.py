@@ -163,10 +163,10 @@ class DESNetwork:
             for c in p.cs:
                 c.w = query_cppn(coord, (c.x, c.y), outgoing,
                                  cppn, self.max_weight, bias = self.cppn_bias, leo=self.enable_leo)
-                if self.ann_bias and not c.b:
+                if self.ann_bias:
                     c.b = query_cppn_bias((0.0, 0.0), (c.x, c.y), outgoing,
                                     cppn, bias = self.cppn_bias)
-                elif self.enable_des_bias and not c.b:
+                elif self.enable_des_bias:
                     c.b = get_cppn_bias(coord, self.bias_cppn, bias=self.cppn_bias)
                 else:
                     c.b = 0
@@ -237,7 +237,7 @@ class DESNetwork:
         #Search for the hidden substrates
         for substrate in self.substrates.values():
             #First do a local search in this substrate
-            for _ in range(substrate.depth):  # Explore from hidden.
+            for _ in range(self.iteration_level):  # Explore from hidden.
                 if substrate.key in unexplored_hidden_nodes:
                     inputs = copy.deepcopy(unexplored_hidden_nodes[substrate.key])
                     for x, y in inputs:
