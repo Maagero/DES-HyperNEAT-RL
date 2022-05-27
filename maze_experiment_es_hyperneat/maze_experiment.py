@@ -13,11 +13,11 @@ import argparse
 sys.path.insert(1, '/Users/maagero/src/deshyperneatrl/maze')
 import maze_environment as maze
 import agent
-
+import visualize
 sys.path.insert(1, '/Users/maagero/src/deshyperneatrl/')
 
 
-
+import parallel
 import config
 import genome
 import reproduction
@@ -27,17 +27,18 @@ import feed_forward
 import population
 import statistics
 import reporting
+import stats as st
 from visualize_cppn import draw_net
 from substrate import Substrate
 from hyperneat import create_phenotype_network
 from es_hyperneat import ESNetwork
 
-VERSION = "M"
+VERSION = "S"
 VERSION_TEXT = "small" if VERSION == "S" else "medium" if VERSION == "M" else "large"
 
 # Network inputs and expected outputs.
-INPUT_COORDINATES = [(-1, 0), (-7/9, 0), (-5/5,0), (-3/9,0), (-1/9,0), (1/9,0), (3/9, 0), (5/9, 0), (7/9,0), (1,0)]
-OUTPUT_COORDINATES = [(-0.5, 1.0), (0.5, 1.0)]
+INPUT_COORDINATES = [ (-1,-1.2), (-1/3, -1.2), (1/3, -1.2), (1,-1.2), (-1, -1), (-1/2, -1), (0,-1), (1/2,-1), (1,-1)]
+OUTPUT_COORDINATES = [(-1.0, 1.0), (0.0, 1.0), (1.0, 1.0)]
 
 SUBSTRATE = Substrate(
     INPUT_COORDINATES, OUTPUT_COORDINATES)
@@ -46,12 +47,12 @@ def params(version):
     """
     ES-HyperNEAT specific parameters.
     """
-    return {"initial_depth": 0 if version == "S" else 1 if version == "M" else 2,
-            "max_depth": 1 if version == "S" else 2 if version == "M" else 3,
+    return {"initial_depth": 1 if version == "S" else 3 if version == "M" else 2,
+            "max_depth": 3 if version == "S" else 3 if version == "M" else 3,
             "variance_threshold": 0.03,
             "band_threshold": 0.3,
             "iteration_level": 1,
-            "division_threshold": 0.5,
+            "division_threshold": 0.3,
             "max_weight": 5.0,
             "activation": "sigmoid"}
 
@@ -87,7 +88,7 @@ class MazeSimulationTrial:
 # It must be initialized before start of each trial.
 trialSim = None
 
-def eval_fitness(genome_id, genome, config, time_steps=400):
+def eval_fitness(genome, config, trialSim, time_steps=400):
     """
     Evaluates fitness of the provided genome.
     Arguments:
@@ -106,18 +107,17 @@ def eval_fitness(genome_id, genome, config, time_steps=400):
     fitness = maze.maze_simulation_evaluate(
                                         env=maze_env, 
                                         net=control_net, 
-                                        time_steps=time_steps)
-
+                                        time_steps=time_steps, activations=network.activations)
     # Store simulation results into the agent record
     record = agent.AgentRecord(
         generation=trialSim.population.generation,
-        agent_id=genome_id)
+        agent_id=genome.key)
     record.fitness = fitness
     record.x = maze_env.agent.location.x
     record.y = maze_env.agent.location.y
     record.hit_exit = maze_env.exit_found
-    record.species_id = trialSim.population.species.get_species_id(genome_id)
-    record.species_age = record.generation - trialSim.population.species.get_species(genome_id).created
+    record.species_id = trialSim.population.species.get_species_id(genome.key)
+    record.species_age = record.generation - trialSim.population.species.get_species(genome.key).created
     # add record to the store
     trialSim.record_store.add_record(record)
 
@@ -134,12 +134,15 @@ def eval_genomes(genomes, config):
                  hyper-parameters
     """
     for genome_id, genome in genomes:
-        genome.fitness = eval_fitness(genome_id, genome, config)
+        genome.fitness = eval_fitness(genome, config, trialSim=trialSim)
 
 def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generations=100, silent=False):
 
-    seed = 11111
-    random.seed()
+    seed = 3454375
+    random.seed(seed)
+
+    output_file = 'es_hyperneat_maze:' + args.maze + '_seed:' + str(seed) + '_generations: ' + str(args.generations) +'.txt'
+    run_stats = st.Stats(output_file)
 
     # Config for CPPN.
     CONFIG = config.Config(genome.DefaultGenome, reproduction.DefaultReproduction,
@@ -156,7 +159,9 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
     pop.add_reporter(stats)
     pop.add_reporter(reporting.StdOutReporter(True))
 
-    best_genome = pop.run(eval_genomes, n_generations)
+    para_evaluator = parallel.ParallelEvaluator(4, eval_fitness, trialSim).evaluate
+
+    best_genome = pop.run(para_evaluator, n_generations, stats=run_stats)
     print("es-hyperneat done")
 
     print('\nBest genome:\n{!s}'.format(best_genome))
@@ -172,6 +177,17 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
         pickle.dump(cppn, output, pickle.HIGHEST_PROTOCOL)
     draw_net(cppn, filename=out_dir)
     draw_net(winner_net, filename=out_dir)
+
+    maze_env = copy.deepcopy(trialSim.orig_maze_environment)
+
+    positions = maze.maze_simulate_pathing(
+                                        env=maze_env, 
+                                        net=winner_net, 
+                                        time_steps=400, activations=network.activations)
+
+    visualize.show_path(maze_env, positions)
+
+    run_stats.write_to_file()
 
     return best_genome, stats, CONFIG
 

@@ -486,6 +486,9 @@ class DefaultGenome(object):
             s += "\n\t" + str(c)
         return s
 
+    def print_complexity(self):
+        s = 'Nodes: ' + str(len(list(self.nodes.keys()))) +'\n' + ' Connections: ' + str(len(list(self.connections.keys())))
+        return s
     @staticmethod
     def create_node(config, node_id):
         node = config.node_gene_type(node_id)

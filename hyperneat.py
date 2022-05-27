@@ -112,11 +112,11 @@ def query_cppn(coord1, coord2, outgoing, cppn, max_weight=5.0, bias = True, leo 
     if leo:
         l = cppn.activate(i)[-1]
     if abs(w) > 0.2 and (not leo or l>0.0):  # If abs(weight) is below threshold, treat weight as 0.0.
-        if w > 0:
+        '''if w > 0:
             w = (w - 0.2) / 0.8
         else:
-            w = (w + 0.2) / 0.8
-        return w * max_weight
+            w = (w + 0.2) / 0.8'''
+        return w
     else:
         return 0.0
 

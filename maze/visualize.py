@@ -299,8 +299,8 @@ def show_path(maze_env, positions):
     fig = plt.figure()
     fig.set_dpi(100)
     ax = fig.subplots(1, 1, sharex=True)
-    ax.set_xlim(0, 210)
-    ax.set_ylim(0, 210)
+    ax.set_xlim(0, 500)
+    ax.set_ylim(0, 500)
     _draw_maze_(maze_env, ax)
     for pos in positions:
         point = plt.Circle((pos.x, pos.y), radius=1, facecolor=(0.0, 0.0, 0.0))
@@ -318,8 +318,8 @@ if __name__=='__main__':
     fig = plt.figure()
     fig.set_dpi(100)
     fig_height = 7
-    width = 210
-    height = 210
+    width = 500
+    height = 500
     fig_width = fig_height * (float(width)/float(2.0 * height )) - 0.2
     print("Plot figure width: %.1f, height: %.1f" % (fig_width, fig_height))
     ax = fig.subplots(1, 1, sharex=True)

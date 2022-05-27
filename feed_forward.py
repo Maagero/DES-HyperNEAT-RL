@@ -14,7 +14,6 @@ class FeedForwardNetwork(object):
 
         for k, v in zip(self.input_nodes, inputs):
             self.values[k] = v
-
         for node, act_func, agg_func, bias, response, links in self.node_evals:
             node_inputs = []
             for i, w in links:

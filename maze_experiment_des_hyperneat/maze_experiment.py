@@ -37,25 +37,25 @@ from substrate import Substrate
 from hyperneat import create_phenotype_network
 from des_hyperneat import DESNetwork
 
-VERSION = "L"
+VERSION = "S"
 VERSION_TEXT = "small" if VERSION == "S" else "medium" if VERSION == "M" else "large"
 
 # Network inputs and expected outputs.
-INPUT_SUBSTRATES = [[(-1, 0), (-7/9, 0), (-5/5,0), (-3/9,0), (-1/9,0), (1/9,0), (3/9, 0), (5/9, 0), (7/9,0), (1,0)]]
-#INPUT_SUBSTRATES = [[(0,0)] for i in range(10)]
+#INPUT_SUBSTRATES = [[(-1, 0), (-7/9, 0), (-5/9,0), (-3/9,0), (-1/9,0), (1/9,0), (3/9, 0), (5/9, 0), (7/9,0), (1,0)]]
+INPUT_SUBSTRATES = [[(-1, 0.0), (-1/2, 0.0), (0,0.0), (1/2,0.0), (1,0.0)],[(-1,0.0), (-1/3, 0.0), (1/3,0.0), (1,0.0)]]
 #INPUT_SUBSTRATES = [[(-1, 0), (-3/5, 0), (-1/5,0), (1/5,0), (3/5,0), (1,0)], [(-1, 0), (-1/3, 0), (1/3,0), (1,0)]]
-OUTPUT_SUBSTRATES = [[(-1, 1.0), (1, 1.0)]]
+OUTPUT_SUBSTRATES = [[(-1.0, 0.0), (0.0,0.0), (1.0, 0.0)]]
 
 def params(version):
     """
     ES-HyperNEAT specific parameters.
     """
-    return {"initial_depth": 1,
-            "max_depth": 3,
-            "variance_threshold": 0.03,
-            "band_threshold": 0.3,
+    return {"initial_depth": 0,
+            "max_depth": 2,
+            "variance_threshold": 0.1,
+            "band_threshold": 0.0,
             "iteration_level": 1,
-            "division_threshold": 0.03,
+            "division_threshold": 0.05,
             "max_weight": 5.0,
             "activation": "sigmoid"}
 
@@ -110,20 +110,7 @@ def eval_fitness(genome, config, trialSim, time_steps=400):
     fitness = maze.maze_simulation_evaluate(
                                         env=maze_env, 
                                         net=control_net, 
-                                        time_steps=time_steps)
-
-    # Store simulation results into the agent record
-    record = agent.AgentRecord(
-        generation=trialSim.population.generation,
-        agent_id=genome.key)
-    record.fitness = fitness
-    record.x = maze_env.agent.location.x
-    record.y = maze_env.agent.location.y
-    record.hit_exit = maze_env.exit_found
-    record.species_id = trialSim.population.species.get_species_id(genome.key)
-    record.species_age = record.generation - trialSim.population.species.get_species(genome.key).created
-    # add record to the store
-    trialSim.record_store.add_record(record)
+                                        time_steps=time_steps, activations=network.activations)
 
     return fitness
 
@@ -144,9 +131,9 @@ def eval_genomes(genomes, config):
 
 def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generations=100, silent=False):
 
-    seed = 4224
+    seed = 32131239
     random.seed(seed)
-    output_file = 'des_hyperneat_maze:' + args.maze + '_seed:' + str(seed) + '_generations: ' + str(args.generations) +'.txt'
+    output_file = 'des_hyperneat_maze:' + args.maze + '_seed:' + str(seed) + '_generations: ' + str(args.generations) + '_cppn_bias_' + '.txt'
     run_stats = st.Stats(output_file)
     # Config for CPPN.
     CONFIG = config.Config(genome.DefaultGenome, reproduction_deshyperneat.DefaultReproduction,
@@ -166,14 +153,15 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
     para_evaluator = parallel.ParallelEvaluator(4, eval_fitness, trialSim)
 
     best_genome = pop.run(para_evaluator.evaluate, n_generations, stats=run_stats)
-    print("es-hyperneat done")
+    print("des-hyperneat done")
 
     print('\nBest genome:\n{!s}'.format(best_genome))
-
+    print('fitness: ' + str(best_genome.fitness))
     # Verify network output against training data.
     print('\nOutput:')
     network = DESNetwork(INPUT_SUBSTRATES, OUTPUT_SUBSTRATES, best_genome, DYNAMIC_PARAMS, CONFIG)
-    winner_net = network.create_phenotype_network()
+    winner_net = network.create_phenotype_network(filename='yes')
+
 
     # Save CPPN if wished reused and draw it to file along with the winner.
     '''with open(out_dir, 'wb') as output:
@@ -185,7 +173,7 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
     positions = maze.maze_simulate_pathing(
                                         env=maze_env, 
                                         net=winner_net, 
-                                        time_steps=400)
+                                        time_steps=400, activations=network.activations)
 
     visualize.show_path(maze_env, positions)
 

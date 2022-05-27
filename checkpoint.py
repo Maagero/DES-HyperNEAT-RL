@@ -66,6 +66,10 @@ class Checkpointer(BaseReporter):
             data = (generation, config, population, species_set, random.getstate())
             pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
+
+    def post_evaluate(self, config, population, species, best_genome, stats):
+        pass
+    
     @staticmethod
     def restore_checkpoint(filename):
         """Resumes the simulation from a previous saved point."""

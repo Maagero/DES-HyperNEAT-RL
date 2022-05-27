@@ -16,7 +16,7 @@ import sys
 #import neat
 
 sys.path.insert(1, '/Users/maagero/src/deshyperneatrl/')
-
+import stats as st
 import feed_forward
 import config as cg
 import genome
@@ -28,7 +28,7 @@ import reporting
 import checkpoint
 import statistics
 # The helper used to visualize experiment results
-
+import parallel
 
 # The maze environment
 sys.path.insert(1, '/Users/maagero/src/deshyperneatrl/maze')
@@ -65,7 +65,7 @@ class MazeSimulationTrial:
 # It must be initialized before start of each trial.
 trialSim = None
 
-def eval_fitness(genome_id, genome, config, time_steps=400):
+def eval_fitness(genome, config, trialSim, time_steps=400):
     """
     Evaluates fitness of the provided genome.
     Arguments:
@@ -83,17 +83,16 @@ def eval_fitness(genome_id, genome, config, time_steps=400):
                                         env=maze_env, 
                                         net=control_net, 
                                         time_steps=time_steps)
-
     # Store simulation results into the agent record
     record = agent.AgentRecord(
         generation=trialSim.population.generation,
-        agent_id=genome_id)
+        agent_id=genome.key)
     record.fitness = fitness
     record.x = maze_env.agent.location.x
     record.y = maze_env.agent.location.y
     record.hit_exit = maze_env.exit_found
-    record.species_id = trialSim.population.species.get_species_id(genome_id)
-    record.species_age = record.generation - trialSim.population.species.get_species(genome_id).created
+    record.species_id = trialSim.population.species.get_species_id(genome.key)
+    record.species_age = record.generation - trialSim.population.species.get_species(genome.key).created
     # add record to the store
     trialSim.record_store.add_record(record)
 
@@ -130,9 +129,11 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
         True if experiment finished with successful solver found. 
     """
     # set random seed
-    seed = 1559231616#int(time.time())#42#
-    random.seed()
+    seed = 647839034#int(time.time())#42#
+    random.seed(seed)
 
+    output_file = 'neat_maze:' + args.maze + '_seed:' + str(seed) + '_generations: ' + str(args.generations) +'.txt'
+    run_stats = st.Stats(output_file)
     # Load configuration.
     config = cg.Config(genome.DefaultGenome, reproduction.DefaultReproduction,
                          species.DefaultSpeciesSet, stagnation.DefaultStagnation,
@@ -153,18 +154,32 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
 
     # Run for up to N generations.
     start_time = time.time()
-    best_genome = p.run(eval_genomes, n=n_generations)
 
+    para_evaluator = parallel.ParallelEvaluator(4, eval_fitness, trialSim)
+
+    best_genome = p.run(para_evaluator.evaluate, n=n_generations, stats=run_stats)
+    winner_net = feed_forward.FeedForwardNetwork.create(best_genome, config)
     elapsed_time = time.time() - start_time
 
     # Display the best genome among generations.
     print('\nBest genome:\n%s' % (best_genome))
-
+    
     solution_found = (best_genome.fitness >= config.fitness_threshold)
     if solution_found:
         print("SUCCESS: The stable maze solver controller was found!!!")
     else:
         print("FAILURE: Failed to find the stable maze solver controller!!!")
+
+    maze_env = copy.deepcopy(trialSim.orig_maze_environment)
+
+    positions = maze.maze_simulate_pathing(
+                                        env=maze_env, 
+                                        net=winner_net, 
+                                        time_steps=400)
+
+    visualize.show_path(maze_env, positions)
+
+    run_stats.write_to_file()
 
     # write the record store data
     rs_file = os.path.join(trial_out_dir, "data.pickle")

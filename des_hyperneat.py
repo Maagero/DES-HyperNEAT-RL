@@ -1,5 +1,7 @@
 import copy
+from matplotlib.pyplot import connect
 import numpy as np
+from torch import true_divide
 from hyperneat import get_cppn_bias, query_cppn, query_cppn_bias
 from visualize_cppn import draw_es
 
@@ -22,14 +24,18 @@ class DESNetwork:
         self.ann_bias = config.layout_config.enable_cppn_bias
 
         self.input_coordinates = []
+        self.input_coordinates_by_substrate = {}
         for i, substrate in enumerate(self.input_substrates.values()):
             substrate.coordinates = input_substrates[i]
             self.input_coordinates += substrate.coordinates
+            self.input_coordinates_by_substrate[substrate.key] = substrate.coordinates
         
         self.output_coordinates = []
+        self.output_coordinates_by_substrate = {}
         for i, substrate in enumerate(self.output_substrates.values()):
             substrate.coordinates = output_substrates[i]
             self.output_coordinates += substrate.coordinates
+            self.output_coordinates_by_substrate[substrate.key] = substrate.coordinates
 
 
 
@@ -54,7 +60,7 @@ class DESNetwork:
         self.connections = set()
         self.config = config
         # Number of layers in the network.
-        self.activations = 2 ** params["max_depth"] + 1 #TODO check this out maybe multiply by num of substrates
+        self.activations = 2 ** params["max_depth"]*len(list(genome.substrates.keys())) + 1 #TODO check this out maybe multiply by num of substrates
         activation_functions = activations.ActivationFunctionSet()
         self.activation = activation_functions.get(params["activation"])
 
@@ -65,52 +71,72 @@ class DESNetwork:
             input_nodes)+len(self.output_coordinates)))
         hidden_idx = len(self.input_coordinates)+len(self.output_coordinates)
 
+
+        #ADD input and output with substrate to coords:
+        coords_in = set()
+        for sub_key, coordinates in self.input_coordinates_by_substrate.items():
+            for coord in coordinates:
+                coords_in.add((sub_key, (coord)))
+        
+        coords_out = set()
+        for sub_key, coordinates in self.output_coordinates_by_substrate.items():
+            for coord in coordinates:
+                coords_out.add((sub_key, (coord)))
+
+
         coordinates, indices, draw_connections, node_evals = [], [], [], []
         nodes = {}
 
-        coordinates.extend(self.input_coordinates)
-        coordinates.extend(self.output_coordinates)
+        coordinates.extend(coords_in)
+        coordinates.extend(coords_out)
         indices.extend(input_nodes)
         indices.extend(output_nodes)
 
         #Unpack coordinates
-        
-
         coords_to_id = dict(zip(coordinates, indices))
-
-
+        
         hidden_nodes, connections = self.des_hyperneat()
-
         # Map hidden coordinates to their IDs.
-        for x, y in hidden_nodes:
-            coords_to_id[x, y] = hidden_idx
-            hidden_idx += 1
-
+        for substrate_key, node_set in hidden_nodes.items():
+            for node in node_set:
+                coords_to_id[substrate_key, node] = hidden_idx
+                hidden_idx += 1
         # For every coordinate:
         # Check the connections and create a node with corresponding connections if appropriate.
-        for (x, y), idx in coords_to_id.items():
-            for c in connections:
-                if c.x2 == x and c.y2 == y:
-                    draw_connections.append(c)
-                    if idx in nodes:
-                        initial, bias = nodes[idx]
-                        initial.append((coords_to_id[c.x1, c.y1], c.weight))
-                        nodes[idx] = (initial, bias)
-                    else:
-                        nodes[idx] = ([(coords_to_id[c.x1, c.y1], c.weight)], c.bias)
-
+        for key, idx in coords_to_id.items():
+            substrate_key, (x,y) = key
+            for element_key, cons in connections.items():
+                if type(element_key) == tuple and element_key[1] != substrate_key:
+                    continue
+                elif element_key == substrate_key:
+                    continue
+                for c in cons:
+                    if c.x2 == x and c.y2 == y:
+                        draw_connections.append(c)
+                        inc_node = element_key
+                        if type(element_key) == tuple:
+                            inc_node = element_key[0]
+                        if idx in nodes:
+                            initial, bias = nodes[idx]
+                            initial.append((coords_to_id[inc_node, (c.x1, c.y1)], c.weight))
+                            nodes[idx] = (initial, bias)
+                        else:
+                            nodes[idx] = ([(coords_to_id[inc_node, (c.x1, c.y1)], c.weight)], c.bias)
         # Combine the indices with the connections/links;
         # forming node_evals used by the RecurrentNetwork.
 
         #With CPPN layout bias
 
+
         for idx, links_bias in nodes.items():
             node_evals.append((idx, self.activation, sum, links_bias[1], 1.0, links_bias[0]))
 
+
         # Visualize the network?
         if filename is not None:
-            draw_es(coords_to_id, draw_connections, filename)
-
+            print(node_evals)
+            #draw_es(coords_to_id, draw_connections, filename)
+        
         # This is actually a feedforward network.
         return recurrent.RecurrentNetwork(input_nodes, output_nodes, node_evals)
 
@@ -170,12 +196,12 @@ class DESNetwork:
                     c.b = get_cppn_bias(coord, self.bias_cppn, bias=self.cppn_bias)
                 else:
                     c.b = 0
-            if ((p.lvl < depth and p.lvl < self.max_depth) and self.variance(p)
+            if (p.lvl < self.initial_depth) or ( p.lvl < self.max_depth and self.variance(p)
                                                 > self.division_threshold):
                 for child in p.cs:
                     q.append(child)
-
         return root
+
 
     def pruning_extraction(self, coord, p, outgoing, cppn):
         """
@@ -208,13 +234,13 @@ class DESNetwork:
                 if con is not None:
                     # Nodes will only connect upwards.
                     # If connections to same layer is wanted, change to con.y1 <= con.y2.
-                    if not c.w == 0.0 and con.y1 < con.y2 and not (con.x1 == con.x2 and con.y1 == con.y2):
+                    if not c.w == 0.0 and not (con.x1 == con.x2 and con.y1 == con.y2):
                         self.connections.add(con)
 
     def des_hyperneat(self):
         # Hidden nodes are (substrate_key, (nodes)) same with unexplored
         hidden_nodes, unexplored_hidden_nodes = {}, {}
-        connections1, connections2, connections3 = set(), set(), set()
+        connections = {}
         #Sort the substrates
         self.substrates = self.sort_substrates()
         #Start the search from the input substrates
@@ -222,13 +248,14 @@ class DESNetwork:
             inputs = substrate.coordinates
             for path in self.paths.values():
                 if path.key[0] == key:
+                    connections[path.key] = set()
                     for x, y in inputs:  # Explore from inputs.
                         root = self.division_initialization((x, y), True, path.cppn, 1)
                         self.pruning_extraction((x, y), root, True, path.cppn)
-                        connections1 = connections1.union(self.connections)
+                        connections[path.key] = connections[path.key].union(self.connections)
                         if path.key[1] not in hidden_nodes:
                             hidden_nodes[path.key[1]] = set()
-                        for c in connections1:
+                        for c in connections[path.key]:
                             hidden_nodes[path.key[1]].add((c.x2, c.y2))
                         self.connections = set()
 
@@ -236,15 +263,16 @@ class DESNetwork:
         
         #Search for the hidden substrates
         for substrate in self.substrates.values():
+            connections[substrate.key] = set()
             #First do a local search in this substrate
-            for _ in range(self.iteration_level):  # Explore from hidden.
+            for _ in range(substrate.depth):  # Explore from hidden.
                 if substrate.key in unexplored_hidden_nodes:
                     inputs = copy.deepcopy(unexplored_hidden_nodes[substrate.key])
                     for x, y in inputs:
                         root = self.division_initialization((x, y), True, substrate.cppn, substrate.depth)
                         self.pruning_extraction((x, y), root, True, substrate.cppn)
-                        connections2 = connections2.union(self.connections)
-                        for c in connections2:
+                        connections[substrate.key] = connections[substrate.key].union(self.connections)
+                        for c in connections[substrate.key]:
                             hidden_nodes[substrate.key].add((c.x2, c.y2))
                         self.connections = set()
                         
@@ -254,13 +282,14 @@ class DESNetwork:
                 # Then search to other substrates from the current
                 for path in self.paths.values():
                     if path.key[0] == substrate.key:
+                        connections[path.key] = set()
                         for x, y in inputs:  # Explore from inputs.
                             root = self.division_initialization((x, y), True, path.cppn, 1)
                             self.pruning_extraction((x, y), root, True, path.cppn)
-                            connections2 = connections2.union(self.connections)
+                            connections[path.key] = connections[path.key].union(self.connections)
                             if path.key[1] not in hidden_nodes:
                                 hidden_nodes[path.key[1]] = set()
-                            for c in connections2:
+                            for c in connections[path.key]:
                                 hidden_nodes[path.key[1]].add((c.x2, c.y2))
                             self.connections = set()
                             
@@ -268,16 +297,18 @@ class DESNetwork:
                 unexplored_hidden_nodes = copy.deepcopy(hidden_nodes)
         #Seartch from the outputs
         for substrate in self.output_substrates.values():
+            for path in self.paths.values():
+                if substrate.key == path.key[1]:
+                    connections[path.key[0]] = set()
             inputs = substrate.coordinates
             for path in self.paths.values():
                 if path.key[1] == substrate.key:
+                    connections[path.key] = set()
                     for x, y in inputs:
                         root = self.division_initialization((x, y), False, path.cppn, 1)
                         self.pruning_extraction((x, y), root, False, path.cppn)
-                        connections3 = connections3.union(self.connections)
+                        connections[path.key] = connections[path.key].union(self.connections)
                         self.connections = set()
-
-        connections = connections1.union(connections2.union(connections3))  
         return self.clean_net(connections)
 
 
@@ -323,47 +354,117 @@ class DESNetwork:
         return sorted_substrate
 
 
+    def merge_dict(self, dict1, dict2):
+        new_dict = copy.deepcopy(dict1)
+        for key, value in dict2.items():
+            if key in new_dict:
+                new_dict[key] = new_dict[key].union(value)
+            else:
+                new_dict[key] = value
+        return new_dict
+
     def clean_net(self, connections):
         """
         Clean a net for dangling connections:
         Intersects paths from input nodes with paths to output.
         """
-        connected_to_inputs = set(tuple(i)
-                                  for i in self.input_coordinates)
-        connected_to_outputs = set(tuple(i)
-                                   for i in self.output_coordinates)
-        true_connections = set()
+        connected_to_inputs = {}
+        for sub_key, coordinates in self.input_coordinates_by_substrate.items():
+            connected_to_inputs[sub_key] = set()
+            for path in self.paths.values():
+                if path.key[0] == sub_key:
+                    for coord in coordinates:
+                        connected_to_inputs[sub_key].add(coord)
+        
+        connected_to_outputs = {}
+        for sub_key, coordinates in self.output_coordinates_by_substrate.items():
+            connected_to_outputs[sub_key] = set()
+            for path in self.paths.values():
+                if path.key[1] == sub_key:
+                    for coord in coordinates:
+                        connected_to_outputs[sub_key].add(coord)
 
+        true_connections = {}
         initial_input_connections = copy.deepcopy(connections)
         initial_output_connections = copy.deepcopy(connections)
 
         add_happened = True
         while add_happened:  # The path from inputs.
             add_happened = False
-            temp_input_connections = copy.deepcopy(initial_input_connections)
-            for c in temp_input_connections:
-                if (c.x1, c.y1) in connected_to_inputs:
-                    connected_to_inputs.add((c.x2, c.y2))
-                    initial_input_connections.remove(c)
-                    add_happened = True
+            for element_key in connections.keys():
+                temp_input_connections = copy.deepcopy(initial_input_connections[element_key])
+                for c in temp_input_connections:
+                    if type(element_key) == tuple:
+                        if element_key[0] in connected_to_inputs and (c.x1, c.y1) in connected_to_inputs[element_key[0]]:
+                            if element_key[1] not in connected_to_inputs:
+                                connected_to_inputs[element_key[1]] = set()
+                            connected_to_inputs[element_key[1]].add((c.x2, c.y2))
+                            initial_input_connections[element_key].remove(c)
+                            add_happened = True
+                    else:
+                        if element_key in connected_to_inputs and (c.x1, c.y1) in connected_to_inputs[element_key]:
+                            connected_to_inputs[element_key].add((c.x2, c.y2))
+                            initial_input_connections[element_key].remove(c)
+                            add_happened = True
+
         add_happened = True
         while add_happened:  # The path to outputs.
             add_happened = False
-            temp_output_connections = copy.deepcopy(initial_output_connections)
-            for c in temp_output_connections:
-                if (c.x2, c.y2) in connected_to_outputs:
-                    connected_to_outputs.add((c.x1, c.y1))
-                    initial_output_connections.remove(c)
-                    add_happened = True
-        true_nodes = connected_to_inputs.intersection(connected_to_outputs)
-        for c in connections:
-            # Only include connection if both source and target node resides in the real path from input to output
-            if (c.x1, c.y1) in true_nodes and (c.x2, c.y2) in true_nodes:
-                true_connections.add(c)
+            for element_key in connections.keys():
+                temp_output_connections = copy.deepcopy(initial_output_connections[element_key])
+                for c in temp_output_connections:
+                    if type(element_key) == tuple:
+                        if element_key[1] in connected_to_outputs and (c.x2, c.y2) in connected_to_outputs[element_key[1]]:
+                            if element_key[0] not in connected_to_outputs:
+                                connected_to_outputs[element_key[0]] = set()
+                            connected_to_outputs[element_key[0]].add((c.x1, c.y1))
+                            initial_output_connections[element_key].remove(c)
+                            add_happened = True
+                    else:
+                        if element_key in connected_to_outputs and (c.x2, c.y2) in connected_to_outputs[element_key]:
+                            connected_to_outputs[element_key].add((c.x1, c.y1))
+                            initial_output_connections[element_key].remove(c)
+                            add_happened = True
 
-        true_nodes -= (set(self.input_coordinates)
-                       .union(set(self.output_coordinates)))
+        #True node is intersection of the connected to input and connected to output
+        true_nodes = {}
+        for element_key in connected_to_inputs.keys():
+            if element_key in connected_to_outputs:
+                true_nodes[element_key] = connected_to_inputs[element_key].intersection(connected_to_outputs[element_key])
 
+        for element_key in connections.keys():
+            for c in connections[element_key]:
+                # Only include connection if both source and target node resides in the real path from input to output
+                if type(element_key)==tuple:
+                    if element_key[0] in true_nodes and element_key[1] in true_nodes:
+                        if (c.x1, c.y1) in true_nodes[element_key[0]] and (c.x2, c.y2) in true_nodes[element_key[1]]:
+                            if element_key not in true_connections:
+                                true_connections[element_key] = set()
+                            true_connections[element_key].add(c)
+                else:
+                    if element_key in true_nodes and (c.x1, c.y1) in true_nodes[element_key] and (c.x2, c.y2) in true_nodes[element_key]:
+                        if element_key not in true_connections:
+                            true_connections[element_key] = set()
+                        true_connections[element_key].add(c)
+
+
+
+        #Remove input and output nodes from the hidden node list
+        for sub_key, coordinates in self.input_coordinates_by_substrate.items():
+            connected_to_inputs[sub_key] = set()
+            for path in self.paths.values():
+                if path.key[0] == sub_key:
+                    for coord in coordinates:
+                        if sub_key in true_nodes and coord in true_nodes[sub_key]:
+                            true_nodes[sub_key].remove(coord)
+        
+        for sub_key, coordinates in self.output_coordinates_by_substrate.items():
+            connected_to_outputs[sub_key] = set()
+            for path in self.paths.values():
+                if path.key[1] == sub_key:
+                    for coord in coordinates:
+                        if sub_key in true_nodes and coord in true_nodes[sub_key]:
+                            true_nodes[sub_key].remove(coord)
         return true_nodes, true_connections
 
 
@@ -404,6 +505,8 @@ class Connection:
     def __hash__(self):
         return hash((self.x1, self.y1, self.x2, self.y2, self.weight))
 
+    def __str__(self) -> str:
+        return str(self.x1) + ', ' + str(self.y1) + ' to ' + str(self.x2) + ', ' + str(self.y2)
 
 def find_pattern(cppn, coord, res=60, max_weight=5.0):
     """

@@ -41,6 +41,10 @@ class RecurrentNetwork(object):
 
         return [ovalues[i] for i in self.output_nodes]
 
+    def print_complexity(self):
+        s = 'Hidden nodes: ' + str(len(self.node_evals)) + '\n Connections: '
+        return s
+
     @staticmethod
     def create(genome, config):
         """ Receives a genome and returns its phenotype (a RecurrentNetwork). """

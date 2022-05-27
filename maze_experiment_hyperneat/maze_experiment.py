@@ -22,6 +22,8 @@ import feed_forward
 import population
 import statistics
 import reporting
+import parallel
+import stats as st
 from visualize_cppn import draw_net
 from substrate import Substrate
 from hyperneat import create_phenotype_network
@@ -34,11 +36,9 @@ import maze_environment as maze
 import agent as agent
 
 # Network inputs and expected outputs.
-INPUT_COORDINATES = [(i/5-1, -1) for i in range(10)]
-HIDDEN_COORDINATES = [[(-1.0, 0.0), (0.0, 0.0), (1.0, 0.0),
-                        (-1.0, -0.5), (0.0, -0.5), (1.0, -0.5),
-                        (-1.0, 0.5), (0.0, 0.5), (1.0, 0.5)]]
-OUTPUT_COORDINATES = [(-0.5, 1.0), (0.5, 1.0)]
+INPUT_COORDINATES = [(-1,-1.2), (-1/3, -1.2), (1/3, -1.2), (1,-1.2), (-1, -1), (-1/2, -1), (0,-1), (1/2,-1), (1,-1)]
+HIDDEN_COORDINATES = [[(-1.0, 0.0), (-7/9, 0.0), (-5/9, 0.0), (-3/9, 0.0), (-1/9, 0.0), (1/9, 0.0), (3/9, 0.0), (5/9, 0.0), (7/9, 0.0), (1.0, 0.0)]]
+OUTPUT_COORDINATES = [(-1, 1.0), (0.0, 1.0), (1, 1.0)]
 ACTIVATIONS = len(HIDDEN_COORDINATES) + 2
 
 SUBSTRATE = Substrate(
@@ -74,7 +74,7 @@ class MazeSimulationTrial:
 # It must be initialized before start of each trial.
 trialSim = None
 
-def eval_fitness(genome_id, genome, config, time_steps=400):
+def eval_fitness(genome, config, trialSim, time_steps=400):
     """
     Evaluates fitness of the provided genome.
     Arguments:
@@ -92,20 +92,7 @@ def eval_fitness(genome_id, genome, config, time_steps=400):
     fitness = maze.maze_simulation_evaluate(
                                         env=maze_env, 
                                         net=control_net, 
-                                        time_steps=time_steps)
-
-    # Store simulation results into the agent record
-    record = agent.AgentRecord(
-        generation=trialSim.population.generation,
-        agent_id=genome_id)
-    record.fitness = fitness
-    record.x = maze_env.agent.location.x
-    record.y = maze_env.agent.location.y
-    record.hit_exit = maze_env.exit_found
-    record.species_id = trialSim.population.species.get_species_id(genome_id)
-    record.species_age = record.generation - trialSim.population.species.get_species(genome_id).created
-    # add record to the store
-    trialSim.record_store.add_record(record)
+                                        time_steps=time_steps, activations=2)
 
     return fitness
 
@@ -134,6 +121,9 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
 
     pop = population.Population(CONFIG)
 
+    output_file = 'hyperneat_maze:' + args.maze + '_seed:' + str(seed) + '_generations: ' + str(args.generations) +'.txt'
+    run_stats = st.Stats(output_file)
+
     # Create the trial simulation
     global trialSim
     trialSim = MazeSimulationTrial(maze_env=maze_env, population=pop)
@@ -142,7 +132,9 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
     pop.add_reporter(stats)
     pop.add_reporter(reporting.StdOutReporter(True))
 
-    best_genome = pop.run(eval_genomes, n_generations)
+    para_eval = parallel.ParallelEvaluator(4, eval_fitness, trialSim).evaluate
+
+    best_genome = pop.run(para_eval, n_generations, stats=run_stats)
     print("hyperneat done")
 
     print('\nBest genome:\n{!s}'.format(best_genome))
@@ -152,11 +144,16 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
     cppn = feed_forward.FeedForwardNetwork.create(best_genome, CONFIG)
     winner_net = create_phenotype_network(cppn, SUBSTRATE)
 
-    # Save CPPN if wished reused and draw it to file along with the winner.
-    with open(out_dir, 'wb') as output:
-        pickle.dump(cppn, output, pickle.HIGHEST_PROTOCOL)
-    draw_net(cppn, filename=out_dir)
-    draw_net(winner_net, filename=out_dir)
+    maze_env = copy.deepcopy(trialSim.orig_maze_environment)
+
+    positions = maze.maze_simulate_pathing(
+                                        env=maze_env, 
+                                        net=winner_net, 
+                                        time_steps=400, activations=2)
+
+    visualize.show_path(maze_env, positions)
+
+    run_stats.write_to_file()
 
     return best_genome, stats, CONFIG
 

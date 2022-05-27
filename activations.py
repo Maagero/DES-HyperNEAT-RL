@@ -7,6 +7,8 @@ and code for adding new user-defined ones
 import math
 import types
 
+from matplotlib.pyplot import step
+
 
 def sigmoid_activation(z):
     z = max(-60.0, min(60.0, 5.0 * z))
@@ -94,6 +96,17 @@ def square_activation(z):
 def cube_activation(z):
     return z ** 3
 
+def linear_activation(z):
+    return z
+
+def step_activation(z):
+    if z>0.0:
+        return 1.0
+    return 0.0
+
+def off_gauss_activation(z):
+    z = max(-3.4, min(3.4, z))
+    return 2*math.exp(-5.0 * z ** 2)-1.0
 
 class InvalidActivationFunction(TypeError):
     pass
@@ -136,6 +149,9 @@ class ActivationFunctionSet(object):
         self.add('hat', hat_activation)
         self.add('square', square_activation)
         self.add('cube', cube_activation)
+        self.add('lin', linear_activation)
+        self.add('step', step_activation)
+        self.add('offgauss', off_gauss_activation)
 
     def add(self, name, function):
         validate_activation(function)

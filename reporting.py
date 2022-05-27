@@ -33,7 +33,7 @@ class ReporterSet(object):
 
     def post_evaluate(self, config, population, species, best_genome, stats):
         for r in self.reporters:
-            print(r)
+            #print(type(r))
             r.post_evaluate(config, population, species, best_genome, stats)
 
     def post_reproduction(self, config, population, species):

@@ -23,7 +23,7 @@ class Agent:
         self.location = location
 
         # defining the range finder sensors
-        self.range_finder_angles = [-90.0, -45.0, 0.0, 45.0, 90.0, -180.0]
+        self.range_finder_angles = [-90.0, -50.0, 0.0, 50.0, 90.0]
 
         # defining the radar sensors
         self.radar_angles = [(315.0, 405.0), (45.0, 135.0), (135.0, 225.0), (225.0, 315.0)]

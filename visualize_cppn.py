@@ -47,7 +47,7 @@ def draw_net(net, filename=None, node_names={}, node_colors={}):
             dot.edge(a, b, _attributes={
                      'style': style, 'color': color, 'penwidth': width})
 
-    dot.render(filename)
+    dot.render(filename, view=True)
 
     return dot
 
@@ -112,4 +112,4 @@ def draw_es(id_to_coords, connections, filename):
         plt.plot(coord[0], coord[1], marker='o', markersize=8.0, color='grey')
 
     plt.grid()
-    fig.savefig(filename)
+    plt.show()

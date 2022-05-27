@@ -2,7 +2,7 @@
 
 from math_util import mean
 from reporting import ReporterSet
-
+import time
 
 class CompleteExtinctionException(Exception):
     pass
@@ -54,7 +54,7 @@ class Population(object):
     def remove_reporter(self, reporter):
         self.reporters.remove(reporter)
 
-    def run(self, fitness_function, n=None):
+    def run(self, fitness_function, n=None, stats=None):
         """
         Runs NEAT's genetic algorithm for at most n generations.  If n
         is None, run until solution is found or extinction occurs.
@@ -73,7 +73,7 @@ class Population(object):
         the genomes themselves (apart from updating the fitness member),
         or the configuration object.
         """
-
+        timer = time.time()
         if self.config.no_fitness_termination and (n is None):
             raise RuntimeError("Cannot have no generational limit with no fitness termination")
 
@@ -94,7 +94,7 @@ class Population(object):
 
                 if best is None or g.fitness > best.fitness:
                     best = g
-            self.reporters.post_evaluate(self.config, self.population, self.species, best)
+            self.reporters.post_evaluate(self.config, self.population, self.species, best, stats)
 
             # Track the best genome ever seen.
             if self.best_genome is None or best.fitness > self.best_genome.fitness:
@@ -105,6 +105,7 @@ class Population(object):
                 fv = self.fitness_criterion(g.fitness for g in self.population.values())
                 if fv >= self.config.fitness_threshold:
                     self.reporters.found_solution(self.config, self.generation, best)
+                    self.species.speciate(self.config, self.population, self.generation, stats = stats)
                     break
 
             # Create the next generation from the current generation.
@@ -125,7 +126,7 @@ class Population(object):
                     raise CompleteExtinctionException()
 
             # Divide the new population into species.
-            self.species.speciate(self.config, self.population, self.generation)
+            self.species.speciate(self.config, self.population, self.generation, stats = stats)
 
             self.reporters.end_generation(self.config, self.population, self.species)
 
@@ -133,5 +134,7 @@ class Population(object):
 
         if self.config.no_fitness_termination:
             self.reporters.found_solution(self.config, self.generation, self.best_genome)
+        if stats:
+            stats.final_save(self.generation, int(time.time()-timer))
 
         return self.best_genome

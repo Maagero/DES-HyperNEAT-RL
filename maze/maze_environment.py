@@ -8,9 +8,10 @@ import math
 
 import agent as agent
 import geometry as geometry
-
+import visualize
+from random import random
 # The maximal allowed speed for the maze solver agent
-MAX_AGENT_SPEED = 3.0
+MAX_AGENT_SPEED = 4.0
 
 class MazeEnvironment:
     """
@@ -55,7 +56,7 @@ class MazeEnvironment:
     def test_passed_waypoint(self, loc):
         if self.waypoints:
             w = self.waypoints[0]
-            if w.distance(loc) < 10:
+            if w.distance(loc) < 15:
                 self.waypoints.remove(w)
                 if self.waypoints:
                     self.initial_distance = self.waypoints[0].distance(loc)
@@ -91,7 +92,6 @@ class MazeEnvironment:
         # The radar sensors
         for rs in self.agent.radar:
             inputs.append(rs)
-
         return inputs
 
     def apply_control_signals(self, control_signals):
@@ -101,9 +101,8 @@ class MazeEnvironment:
         Arguments:
             control_signals: The control signals received from the control ANN
         """
-        self.agent.angular_vel  += (control_signals[0] - 0.5)
-        self.agent.speed        += (control_signals[1] - 0.5)
-
+        self.agent.angular_vel  = ((control_signals[0]-control_signals[2])*18)
+        self.agent.speed        = (control_signals[1]*20)
         # constrain the speed & angular velocity
         if self.agent.speed > MAX_AGENT_SPEED:
             self.agent.speed = MAX_AGENT_SPEED
@@ -111,11 +110,12 @@ class MazeEnvironment:
         if self.agent.speed < -MAX_AGENT_SPEED:
             self.agent.speed = -MAX_AGENT_SPEED
         
-        if self.agent.angular_vel > MAX_AGENT_SPEED:
+        '''if self.agent.angular_vel > MAX_AGENT_SPEED:
             self.agent.angular_vel = MAX_AGENT_SPEED
         
         if self.agent.angular_vel < -MAX_AGENT_SPEED:
-            self.agent.angular_vel = -MAX_AGENT_SPEED
+            self.agent.angular_vel = -MAX_AGENT_SPEED'''
+
     
     def update_rangefinder_sensors(self):
         """
@@ -150,7 +150,7 @@ class MazeEnvironment:
                         min_range = found_range
 
             # Update sensor value
-            self.agent.range_finders[i] = min_range
+            self.agent.range_finders[i] = min_range/100.0
 
     def update_radars(self):
         """
@@ -194,13 +194,7 @@ class MazeEnvironment:
 
         # Update current Agent's heading (we consider the simulation time step size equal to 1s
         # and the angular velocity as degrees per second)
-        self.agent.heading += self.agent.angular_vel
-
-        # Enforce angular velocity bounds by wrapping
-        if self.agent.heading > 360:
-            self.agent.heading -= 360
-        elif self.agent.heading < 0:
-            self.agent.heading += 360
+        self.agent.heading = (self.agent.heading + self.agent.angular_vel) % 360
 
         # find the next location of the agent
         new_loc = geometry.Point(
@@ -210,7 +204,6 @@ class MazeEnvironment:
 
         if not self.test_wall_collision(new_loc):
             self.agent.location = new_loc
-
         # update agent's sensors
         self.update_rangefinder_sensors()
         self.update_radars()
@@ -288,7 +281,7 @@ def read_environment(file_path):
     # create and return the maze environment
     return MazeEnvironment(agent=maze_agent, walls=walls, exit_point=maze_exit, waypoints=waypoints)
 
-def maze_simulation_evaluate(env, net, time_steps):
+def maze_simulation_evaluate(env, net, time_steps, activations = 1):
     """
     The function to evaluate maze simulation for specific environment
     and controll ANN provided. The results will be saved into provided
@@ -299,10 +292,11 @@ def maze_simulation_evaluate(env, net, time_steps):
         time_steps: The number of time steps for maze simulation.
     """
     for i in range(time_steps):
-        if maze_simulation_step(env, net):
-            print("Maze solved in %d steps" % (i + 1))
-            return 10.0
-        
+        if maze_simulation_step(env, net, activations):
+            if env.exit_found:
+                print("Maze solved in %d steps" % (i + 1))
+                return 10.0
+            break
     # Calculate the fitness score based on distance from exit
     if env.waypoints:
         fitness = env.agent_distance_to_waypoint(env.waypoints[0])
@@ -316,7 +310,7 @@ def maze_simulation_evaluate(env, net, time_steps):
     return fitness
 
 
-def maze_simulation_step(env, net):
+def maze_simulation_step(env, net, activations):
     """
     The function to perform one step of maze simulation.
     Arguments:
@@ -326,21 +320,24 @@ def maze_simulation_step(env, net):
         The True if maze agent solved the maze.
     """
     # create inputs from the current state of the environment
+    
     inputs = env.create_net_inputs()
     # load inputs into controll ANN and get results
-    output = net.activate(inputs)
+    for _ in range(activations):
+        output = net.activate(inputs)
     # apply control signal to the environment and update
     return env.update(output)
 
 
-def maze_simulate_pathing(env, net, time_steps):
+def maze_simulate_pathing(env, net, time_steps, activations = 1):
     positions = []
     for i in range(time_steps):
         positions.append(env.agent.location)
-        if maze_simulation_step(env, net):
-            print('Goal reached!')
+        if maze_simulation_step(env, net, activations):
+            print('Simulation ended!')
             break
-
+        
+    print(i)
     return positions
 
     
