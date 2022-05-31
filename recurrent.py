@@ -45,6 +45,18 @@ class RecurrentNetwork(object):
         s = 'Hidden nodes: ' + str(len(self.node_evals)) + '\n Connections: '
         return s
 
+    def get_hidde_nodes(self):
+        return len(self.node_evals) - len(self.output_nodes)
+
+    def get_connections(self):
+        cons = 0
+        for node, activation, aggregation, bias, response, links in self.node_evals:
+            cons += len(links)
+        return cons
+
+    def get_nodes_cppn(self):
+        return (self.get_hidde_nodes(), self.get_connections())
+
     @staticmethod
     def create(genome, config):
         """ Receives a genome and returns its phenotype (a RecurrentNetwork). """

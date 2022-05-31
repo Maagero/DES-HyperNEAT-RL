@@ -54,7 +54,7 @@ class Population(object):
     def remove_reporter(self, reporter):
         self.reporters.remove(reporter)
 
-    def run(self, fitness_function, n=None, stats = None):
+    def run(self, fitness_function, n=None, stats = None, time_limit=None):
         """
         Runs NEAT's genetic algorithm for at most n generations.  If n
         is None, run until solution is found or extinction occurs.
@@ -79,6 +79,8 @@ class Population(object):
 
         k = 0
         while n is None or k < n:
+            if time.time()-timer >= time_limit:
+                break
             k += 1
 
             self.reporters.start_generation(self.generation)

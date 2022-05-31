@@ -94,7 +94,7 @@ def eval_fitness(genome, config, trialSim, time_steps=400):
                                         net=control_net, 
                                         time_steps=time_steps, activations=2)
 
-    return fitness
+    return fitness, genome.get_nodes_cppn(), control_net.get_nodes_cppn()
 
 def eval_genomes(genomes, config):
     """
@@ -180,6 +180,6 @@ if __name__ == '__main__':
     config_path = os.path.join(local_dir, 'config.ini')
 
     trial_out_dir = os.path.join(out_dir, args.maze)
-
+    
     WINNER = run_experiment(config_file=config_path, maze_env=maze_env, trial_out_dir=trial_out_dir, n_generations=args.generations, args=args)  # Only relevant to look at the winner.
     

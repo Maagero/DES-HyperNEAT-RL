@@ -140,7 +140,7 @@ class StdOutReporter(BaseReporter):
                                                                                  best_genome.size(),
                                                                                  best_species_id,
                                                                                  best_genome.key))
-        stats.generation_save(self.generation, best_genome.fitness, best_genome.size(), fit_mean, fit_std)
+        stats.generation_save(self.generation, best_genome.fitness, best_genome.cppn_nodes_cons, best_genome.ann_nodes_cons, fit_mean, fit_std)
 
     def complete_extinction(self):
         self.num_extinctions += 1

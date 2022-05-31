@@ -14,119 +14,137 @@
 <polygon fill="lightgray" stroke="black" points="38,-137.44 0,-137.44 0,-119.44 38,-119.44 38,-137.44"/>
 <text text-anchor="middle" x="19" y="-126.24" font-family="Times,serif" font-size="9.00">RF_R</text>
 </g>
-<!-- ANG_VEL -->
-<g id="node10" class="node">
-<title>ANG_VEL</title>
-<ellipse fill="lightblue" stroke="black" cx="47" cy="-41.72" rx="41.94" ry="41.94"/>
-<text text-anchor="middle" x="47" y="-39.52" font-family="Times,serif" font-size="9.00">ANG_VEL</text>
-</g>
-<!-- RF_R&#45;&gt;ANG_VEL -->
-<g id="edge2" class="edge">
-<title>RF_R&#45;&gt;ANG_VEL</title>
-<path fill="none" stroke="green" stroke-width="0.43" d="M21.68,-119.32C23.93,-112.52 27.33,-102.23 30.92,-91.37"/>
-<polygon fill="green" stroke="green" stroke-width="0.43" points="34.29,-92.34 34.1,-81.75 27.64,-90.15 34.29,-92.34"/>
-</g>
 <!-- RF_FR -->
 <g id="node2" class="node">
 <title>RF_FR</title>
-<polygon fill="lightgray" stroke="black" points="156,-137.44 112,-137.44 112,-119.44 156,-119.44 156,-137.44"/>
-<text text-anchor="middle" x="134" y="-126.24" font-family="Times,serif" font-size="9.00">RF_FR</text>
-</g>
-<!-- VEL -->
-<g id="node11" class="node">
-<title>VEL</title>
-<ellipse fill="lightblue" stroke="black" cx="198" cy="-41.72" rx="24.08" ry="24.08"/>
-<text text-anchor="middle" x="198" y="-39.52" font-family="Times,serif" font-size="9.00">VEL</text>
-</g>
-<!-- RF_FR&#45;&gt;VEL -->
-<g id="edge1" class="edge">
-<title>RF_FR&#45;&gt;VEL</title>
-<path fill="none" stroke="red" stroke-width="0.33" d="M140.14,-119.32C148.74,-107.93 164.79,-86.67 177.81,-69.44"/>
-<polygon fill="red" stroke="red" stroke-width="0.33" points="180.68,-71.45 183.92,-61.36 175.09,-67.23 180.68,-71.45"/>
-</g>
-<!-- RF_F -->
-<g id="node3" class="node">
-<title>RF_F</title>
-<polygon fill="lightgray" stroke="black" points="278,-137.44 240,-137.44 240,-119.44 278,-119.44 278,-137.44"/>
-<text text-anchor="middle" x="259" y="-126.24" font-family="Times,serif" font-size="9.00">RF_F</text>
-</g>
-<!-- RF_F&#45;&gt;VEL -->
-<g id="edge7" class="edge">
-<title>RF_F&#45;&gt;VEL</title>
-<path fill="none" stroke="green" stroke-width="0.29" d="M253.15,-119.32C245.08,-108.1 230.11,-87.32 217.81,-70.23"/>
-<polygon fill="green" stroke="green" stroke-width="0.29" points="220.35,-67.77 211.67,-61.7 214.67,-71.86 220.35,-67.77"/>
+<polygon fill="lightgray" stroke="black" points="222,-137.44 178,-137.44 178,-119.44 222,-119.44 222,-137.44"/>
+<text text-anchor="middle" x="200" y="-126.24" font-family="Times,serif" font-size="9.00">RF_FR</text>
 </g>
 <!-- 2 -->
 <g id="node12" class="node">
 <title>2</title>
-<ellipse fill="lightblue" stroke="black" cx="315" cy="-41.72" rx="14.7" ry="14.7"/>
-<text text-anchor="middle" x="315" y="-39.52" font-family="Times,serif" font-size="9.00">2</text>
+<ellipse fill="lightblue" stroke="black" cx="200" cy="-41.72" rx="14.7" ry="14.7"/>
+<text text-anchor="middle" x="200" y="-39.52" font-family="Times,serif" font-size="9.00">2</text>
 </g>
-<!-- RF_F&#45;&gt;2 -->
-<g id="edge4" class="edge">
-<title>RF_F&#45;&gt;2</title>
-<path fill="none" stroke="green" stroke-width="0.71" d="M264.37,-119.32C272.86,-106.48 289.62,-81.11 301.54,-63.09"/>
-<polygon fill="green" stroke="green" stroke-width="0.71" points="304.66,-64.71 307.25,-54.44 298.82,-60.85 304.66,-64.71"/>
+<!-- RF_FR&#45;&gt;2 -->
+<g id="edge8" class="edge">
+<title>RF_FR&#45;&gt;2</title>
+<path fill="none" stroke="green" stroke-width="0.63" d="M200,-119.32C200,-107.38 200,-84.61 200,-66.99"/>
+<polygon fill="green" stroke="green" stroke-width="0.63" points="203.5,-66.82 200,-56.82 196.5,-66.82 203.5,-66.82"/>
+</g>
+<!-- RF_F -->
+<g id="node3" class="node">
+<title>RF_F</title>
+<polygon fill="lightgray" stroke="black" points="524,-137.44 486,-137.44 486,-119.44 524,-119.44 524,-137.44"/>
+<text text-anchor="middle" x="505" y="-126.24" font-family="Times,serif" font-size="9.00">RF_F</text>
 </g>
 <!-- RF_FL -->
 <g id="node4" class="node">
 <title>RF_FL</title>
-<polygon fill="lightgray" stroke="black" points="459.5,-137.44 416.5,-137.44 416.5,-119.44 459.5,-119.44 459.5,-137.44"/>
-<text text-anchor="middle" x="438" y="-126.24" font-family="Times,serif" font-size="9.00">RF_FL</text>
+<polygon fill="lightgray" stroke="black" points="467.5,-137.44 424.5,-137.44 424.5,-119.44 467.5,-119.44 467.5,-137.44"/>
+<text text-anchor="middle" x="446" y="-126.24" font-family="Times,serif" font-size="9.00">RF_FL</text>
+</g>
+<!-- VEL -->
+<g id="node11" class="node">
+<title>VEL</title>
+<ellipse fill="lightblue" stroke="black" cx="353" cy="-41.72" rx="24.08" ry="24.08"/>
+<text text-anchor="middle" x="353" y="-39.52" font-family="Times,serif" font-size="9.00">VEL</text>
+</g>
+<!-- RF_FL&#45;&gt;VEL -->
+<g id="edge2" class="edge">
+<title>RF_FL&#45;&gt;VEL</title>
+<path fill="none" stroke="green" stroke-width="0.35" d="M437.08,-119.32C423.6,-107.03 397.52,-83.27 377.96,-65.46"/>
+<polygon fill="green" stroke="green" stroke-width="0.35" points="380.31,-62.86 370.56,-58.72 375.6,-68.04 380.31,-62.86"/>
 </g>
 <!-- RF_L -->
 <g id="node5" class="node">
 <title>RF_L</title>
-<polygon fill="lightgray" stroke="black" points="94,-137.44 56,-137.44 56,-119.44 94,-119.44 94,-137.44"/>
-<text text-anchor="middle" x="75" y="-126.24" font-family="Times,serif" font-size="9.00">RF_L</text>
+<polygon fill="lightgray" stroke="black" points="342,-137.44 304,-137.44 304,-119.44 342,-119.44 342,-137.44"/>
+<text text-anchor="middle" x="323" y="-126.24" font-family="Times,serif" font-size="9.00">RF_L</text>
 </g>
-<!-- RF_L&#45;&gt;ANG_VEL -->
+<!-- RF_L&#45;&gt;VEL -->
 <g id="edge6" class="edge">
-<title>RF_L&#45;&gt;ANG_VEL</title>
-<path fill="none" stroke="red" stroke-width="0.18" d="M72.32,-119.32C70.07,-112.52 66.67,-102.23 63.08,-91.37"/>
-<polygon fill="red" stroke="red" stroke-width="0.18" points="66.36,-90.15 59.9,-81.75 59.71,-92.34 66.36,-90.15"/>
+<title>RF_L&#45;&gt;VEL</title>
+<path fill="none" stroke="green" stroke-width="0.32" d="M325.88,-119.32C329.54,-108.96 336.1,-90.44 341.85,-74.21"/>
+<polygon fill="green" stroke="green" stroke-width="0.32" points="345.25,-75.09 345.29,-64.49 338.65,-72.75 345.25,-75.09"/>
+</g>
+<!-- RF_L&#45;&gt;2 -->
+<g id="edge10" class="edge">
+<title>RF_L&#45;&gt;2</title>
+<path fill="none" stroke="green" stroke-width="0.58" d="M311.21,-119.32C290.23,-104.87 246.21,-74.55 220.29,-56.69"/>
+<polygon fill="green" stroke="green" stroke-width="0.58" points="222.16,-53.73 211.94,-50.94 218.19,-59.5 222.16,-53.73"/>
 </g>
 <!-- RF_B -->
 <g id="node6" class="node">
 <title>RF_B</title>
-<polygon fill="lightgray" stroke="black" points="334,-137.44 296,-137.44 296,-119.44 334,-119.44 334,-137.44"/>
-<text text-anchor="middle" x="315" y="-126.24" font-family="Times,serif" font-size="9.00">RF_B</text>
+<polygon fill="lightgray" stroke="black" points="160,-137.44 122,-137.44 122,-119.44 160,-119.44 160,-137.44"/>
+<text text-anchor="middle" x="141" y="-126.24" font-family="Times,serif" font-size="9.00">RF_B</text>
+</g>
+<!-- ANG_VEL -->
+<g id="node10" class="node">
+<title>ANG_VEL</title>
+<ellipse fill="lightblue" stroke="black" cx="103" cy="-41.72" rx="41.94" ry="41.94"/>
+<text text-anchor="middle" x="103" y="-39.52" font-family="Times,serif" font-size="9.00">ANG_VEL</text>
+</g>
+<!-- RF_B&#45;&gt;ANG_VEL -->
+<g id="edge11" class="edge">
+<title>RF_B&#45;&gt;ANG_VEL</title>
+<path fill="none" stroke="red" stroke-width="0.13" d="M137.36,-119.32C134.13,-112.13 129.14,-101.01 123.96,-89.45"/>
+<polygon fill="red" stroke="red" stroke-width="0.13" points="127.08,-87.84 119.79,-80.15 120.69,-90.71 127.08,-87.84"/>
 </g>
 <!-- RF_B&#45;&gt;2 -->
-<g id="edge3" class="edge">
+<g id="edge5" class="edge">
 <title>RF_B&#45;&gt;2</title>
-<path fill="none" stroke="green" stroke-width="0.19" d="M315,-119.32C315,-107.38 315,-84.61 315,-66.99"/>
-<polygon fill="green" stroke="green" stroke-width="0.19" points="318.5,-66.82 315,-56.82 311.5,-66.82 318.5,-66.82"/>
+<path fill="none" stroke="red" stroke-width="0.2" d="M146.66,-119.32C155.6,-106.48 173.26,-81.11 185.81,-63.09"/>
+<polygon fill="red" stroke="red" stroke-width="0.2" points="188.99,-64.65 191.84,-54.44 183.25,-60.65 188.99,-64.65"/>
 </g>
 <!-- RAD_F -->
 <g id="node7" class="node">
 <title>RAD_F</title>
-<polygon fill="lightgray" stroke="black" points="398,-137.44 352,-137.44 352,-119.44 398,-119.44 398,-137.44"/>
-<text text-anchor="middle" x="375" y="-126.24" font-family="Times,serif" font-size="9.00">RAD_F</text>
+<polygon fill="lightgray" stroke="black" points="406,-137.44 360,-137.44 360,-119.44 406,-119.44 406,-137.44"/>
+<text text-anchor="middle" x="383" y="-126.24" font-family="Times,serif" font-size="9.00">RAD_F</text>
 </g>
-<!-- RAD_F&#45;&gt;2 -->
-<g id="edge5" class="edge">
-<title>RAD_F&#45;&gt;2</title>
-<path fill="none" stroke="green" stroke-width="0.38" d="M369.25,-119.32C360.16,-106.48 342.19,-81.11 329.43,-63.09"/>
-<polygon fill="green" stroke="green" stroke-width="0.38" points="331.94,-60.58 323.3,-54.44 326.22,-64.62 331.94,-60.58"/>
+<!-- RAD_F&#45;&gt;VEL -->
+<g id="edge1" class="edge">
+<title>RAD_F&#45;&gt;VEL</title>
+<path fill="none" stroke="red" stroke-width="0.54" d="M380.12,-119.32C376.46,-108.96 369.9,-90.44 364.15,-74.21"/>
+<polygon fill="red" stroke="red" stroke-width="0.54" points="367.35,-72.75 360.71,-64.49 360.75,-75.09 367.35,-72.75"/>
 </g>
 <!-- RAD_L -->
 <g id="node8" class="node">
 <title>RAD_L</title>
-<polygon fill="lightgray" stroke="black" points="524,-137.44 478,-137.44 478,-119.44 524,-119.44 524,-137.44"/>
-<text text-anchor="middle" x="501" y="-126.24" font-family="Times,serif" font-size="9.00">RAD_L</text>
+<polygon fill="lightgray" stroke="black" points="286,-137.44 240,-137.44 240,-119.44 286,-119.44 286,-137.44"/>
+<text text-anchor="middle" x="263" y="-126.24" font-family="Times,serif" font-size="9.00">RAD_L</text>
+</g>
+<!-- RAD_L&#45;&gt;VEL -->
+<g id="edge4" class="edge">
+<title>RAD_L&#45;&gt;VEL</title>
+<path fill="none" stroke="green" stroke-width="0.44" d="M271.63,-119.32C284.49,-107.21 309.18,-83.97 328,-66.25"/>
+<polygon fill="green" stroke="green" stroke-width="0.44" points="330.78,-68.44 335.66,-59.04 325.98,-63.35 330.78,-68.44"/>
+</g>
+<!-- RAD_L&#45;&gt;2 -->
+<g id="edge9" class="edge">
+<title>RAD_L&#45;&gt;2</title>
+<path fill="none" stroke="red" stroke-width="0.28" d="M256.96,-119.32C247.27,-106.29 227.99,-80.36 214.56,-62.3"/>
+<polygon fill="red" stroke="red" stroke-width="0.28" points="217.28,-60.09 208.5,-54.15 211.66,-64.27 217.28,-60.09"/>
 </g>
 <!-- RAD_B -->
 <g id="node9" class="node">
 <title>RAD_B</title>
-<polygon fill="lightgray" stroke="black" points="221.5,-137.44 174.5,-137.44 174.5,-119.44 221.5,-119.44 221.5,-137.44"/>
-<text text-anchor="middle" x="198" y="-126.24" font-family="Times,serif" font-size="9.00">RAD_B</text>
+<polygon fill="lightgray" stroke="black" points="103.5,-137.44 56.5,-137.44 56.5,-119.44 103.5,-119.44 103.5,-137.44"/>
+<text text-anchor="middle" x="80" y="-126.24" font-family="Times,serif" font-size="9.00">RAD_B</text>
 </g>
-<!-- RAD_B&#45;&gt;VEL -->
-<g id="edge8" class="edge">
-<title>RAD_B&#45;&gt;VEL</title>
-<path fill="none" stroke="red" stroke-width="1.24" d="M198,-119.32C198,-109.33 198,-91.75 198,-75.96"/>
-<polygon fill="red" stroke="red" stroke-width="1.24" points="201.5,-75.93 198,-65.93 194.5,-75.93 201.5,-75.93"/>
+<!-- RAD_B&#45;&gt;ANG_VEL -->
+<g id="edge3" class="edge">
+<title>RAD_B&#45;&gt;ANG_VEL</title>
+<path fill="none" stroke="red" stroke-width="0.19" d="M82.21,-119.32C84.01,-112.66 86.74,-102.63 89.62,-92"/>
+<polygon fill="red" stroke="red" stroke-width="0.19" points="93.05,-92.72 92.29,-82.15 86.3,-90.88 93.05,-92.72"/>
+</g>
+<!-- RAD_B&#45;&gt;2 -->
+<g id="edge7" class="edge">
+<title>RAD_B&#45;&gt;2</title>
+<path fill="none" stroke="red" stroke-width="0.89" d="M95.55,-119.31C110.91,-111.03 134.8,-97.45 154,-83.44 163.92,-76.2 174.23,-67.23 182.57,-59.55"/>
+<polygon fill="red" stroke="red" stroke-width="0.89" points="184.98,-62.08 189.88,-52.69 180.19,-56.98 184.98,-62.08"/>
 </g>
 </g>
 </svg>

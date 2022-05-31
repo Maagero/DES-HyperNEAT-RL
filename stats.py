@@ -14,8 +14,9 @@ class Stats:
         # Key gen_num, value: genome
         self.champions = {}
 
-        # Key: gen_num, value (cppn size, ann size)
-        self.champion_connections = {}
+        # Key: gen_num, value (node, connections)
+        self.champion_cppn_nodes_connections = {}
+        self.champion_ann_nodes_connections = {}
 
         #Key: gen_num, value: avg fitness
         self.average_fitness = {}
@@ -28,9 +29,10 @@ class Stats:
         self.std_gene_distance = {}
 
 
-    def generation_save(self,gen_num,  champ_fit, champ_con, avg_fit,std_fit):
+    def generation_save(self,gen_num,  champ_fit, champ_cppn, champ_ann, avg_fit,std_fit):
         self.champion_fitness[gen_num] = champ_fit
-        self.champion_connections[gen_num] = champ_con
+        self.champion_cppn_nodes_connections[gen_num] = champ_cppn
+        self.champion_ann_nodes_connections[gen_num] = champ_ann
         self.average_fitness[gen_num] = avg_fit
         self.std_fit[gen_num] = std_fit
         
@@ -52,14 +54,16 @@ class Stats:
             file.write('\n')
             file.write('Total run time: ' + str(self.run_time) + ' seconds')            
             file.write('\n')
-            file.write('gen_num, champ_fit, average_fit, std_fit, champ_cppn_con, champ_ann_con, mean_genetic_dist, std_genetic_dist  \n')
+            file.write('gen_num, champ_fit, average_fit, std_fit, cppn_nodes, cppn_connections, ann_nodes, ann_connections, mean_genetic_dist, std_genetic_dist  \n')
             for key in self.champion_fitness.keys():
                 file.write(str(key) + ',' + 
                             str(self.champion_fitness[key]) + ',' + 
                             str(self.average_fitness[key]) + ',' + 
                             str(self.std_fit[key]) + ',' + 
-                            str(self.champion_connections[key][0])+ ',' + 
-                            str(self.champion_connections[key][1])+ ',' + 
+                            str(self.champion_cppn_nodes_connections[key][0])+ ',' + 
+                            str(self.champion_cppn_nodes_connections[key][1])+ ',' + 
+                            str(self.champion_ann_nodes_connections[key][0])+ ',' + 
+                            str(self.champion_ann_nodes_connections[key][1])+ ',' + 
                             str(self.mean_gene_distance[key])+ ',' + 
                             str(self.std_gene_distance[key]))
                 file.write('\n')

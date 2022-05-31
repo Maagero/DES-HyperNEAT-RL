@@ -13,7 +13,7 @@ class LayoutConfig:
         self.path_gene_type = params['path_gene_type']
         self.genome_type = params['genome_type']
         self.genome_config = genome_config
-        self.substrate_indexer = count(1)
+        self.substrate_indexer = None
         self.cppn_bias_indexer = count(1)
         #TODO add all layout params here for
         self._params = [ConfigParameter('prob_add_substrate', float),
@@ -40,7 +40,7 @@ class LayoutConfig:
             if substrate_dict:
                 self.substrate_indexer = count(max(list(substrate_dict)) + 1)
             else:
-                self.substrate_indexer = count(max(list(substrate_dict)) + 1)
+                self.substrate_indexer = count(max(list(self.output_substrates)) + 1)
 
         new_id = next(self.substrate_indexer)
 
@@ -65,7 +65,8 @@ class Layout:
         self.substrates = {}
         self.paths = {}
         self.fitness = None
-
+        self.cppn_nodes_cons = (0, 0)
+        self.ann_nodes_cons = (0, 0)
 
 
     def configure_new(self, config):
@@ -288,6 +289,19 @@ class Layout:
         distance = paths_distance + substrate_distance
         return distance
 
+
+    def get_nodes_cppn(self):
+        nodes = 0
+        cons = 0
+        for substrate in self.substrates.values():
+            n, c = substrate.cppn.size()
+            nodes += n
+            cons += c
+        for path in self.paths.values():
+            n, c = path.cppn.size()
+            nodes += n
+            cons += c
+        return (nodes, cons)
 
     def size(self):
         """

@@ -42,7 +42,7 @@ VERSION_TEXT = "small" if VERSION == "S" else "medium" if VERSION == "M" else "l
 
 # Network inputs and expected outputs.
 #INPUT_SUBSTRATES = [[(-1, 0), (-7/9, 0), (-5/9,0), (-3/9,0), (-1/9,0), (1/9,0), (3/9, 0), (5/9, 0), (7/9,0), (1,0)]]
-INPUT_SUBSTRATES = [[(-1, 0.0), (-1/2, 0.0), (0,0.0), (1/2,0.0), (1,0.0)],[(-1,0.0), (-1/3, 0.0), (1/3,0.0), (1,0.0)]]
+INPUT_SUBSTRATES = [[(-1, 0.0), (-1/2, 0.0), (0,0.0), (1/2,0.0), (1,0.0), (-1,-1.0), (-1/3, -1.0), (1/3,-1.0), (1,-1.0)]]
 #INPUT_SUBSTRATES = [[(-1, 0), (-3/5, 0), (-1/5,0), (1/5,0), (3/5,0), (1,0)], [(-1, 0), (-1/3, 0), (1/3,0), (1,0)]]
 OUTPUT_SUBSTRATES = [[(-1.0, 0.0), (0.0,0.0), (1.0, 0.0)]]
 
@@ -52,7 +52,7 @@ def params(version):
     """
     return {"initial_depth": 0,
             "max_depth": 2,
-            "variance_threshold": 0.1,
+            "variance_threshold": 0.5,
             "band_threshold": 0.0,
             "iteration_level": 1,
             "division_threshold": 0.05,
@@ -112,7 +112,7 @@ def eval_fitness(genome, config, trialSim, time_steps=400):
                                         net=control_net, 
                                         time_steps=time_steps, activations=network.activations)
 
-    return fitness
+    return fitness, genome.get_nodes_cppn(), control_net.get_nodes_cppn()
 
 def eval_genomes(genomes, config):
     """
@@ -129,11 +129,9 @@ def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
         genome.fitness = eval_fitness(genome_id, genome, config)
 
-def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generations=100, silent=False):
+def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generations=100, silent=False, seed = None, output_file=None):
 
-    seed = 32131239
     random.seed(seed)
-    output_file = 'des_hyperneat_maze:' + args.maze + '_seed:' + str(seed) + '_generations: ' + str(args.generations) + '_cppn_bias_' + '.txt'
     run_stats = st.Stats(output_file)
     # Config for CPPN.
     CONFIG = config.Config(genome.DefaultGenome, reproduction_deshyperneat.DefaultReproduction,
@@ -152,7 +150,7 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
 
     para_evaluator = parallel.ParallelEvaluator(4, eval_fitness, trialSim)
 
-    best_genome = pop.run(para_evaluator.evaluate, n_generations, stats=run_stats)
+    best_genome = pop.run(para_evaluator.evaluate, n_generations, stats=run_stats, time_limit=120)
     print("des-hyperneat done")
 
     print('\nBest genome:\n{!s}'.format(best_genome))
@@ -166,7 +164,7 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
     # Save CPPN if wished reused and draw it to file along with the winner.
     '''with open(out_dir, 'wb') as output:
         pickle.dump(network, output, pickle.HIGHEST_PROTOCOL)'''
-    draw_net(winner_net, filename=out_dir)
+    #draw_net(winner_net, filename=out_dir)
 
     maze_env = copy.deepcopy(trialSim.orig_maze_environment)
 
@@ -175,7 +173,7 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
                                         net=winner_net, 
                                         time_steps=400, activations=network.activations)
 
-    visualize.show_path(maze_env, positions)
+    #visualize.show_path(maze_env, positions)
 
     run_stats.write_to_file()
     return best_genome, stats, CONFIG
@@ -185,9 +183,9 @@ def run_experiment(config_file, maze_env, trial_out_dir, args=None, n_generation
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="The maze experiment runner.")
-    parser.add_argument('-m', '--maze', default='medium', 
+    parser.add_argument('-m', '--maze', default='hard', 
                         help='The maze configuration to use.')
-    parser.add_argument('-g', '--generations', default=500, type=int, 
+    parser.add_argument('-g', '--generations', default=250, type=int,
                         help='The number of generations for the evolutionary process.')
     parser.add_argument('--width', type=int, default=400, help='The width of the records subplot')
     parser.add_argument('--height', type=int, default=400, help='The height of the records subplot')
@@ -203,6 +201,15 @@ if __name__ == '__main__':
     config_path = os.path.join(local_dir, 'config.ini')
 
     trial_out_dir = os.path.join(out_dir, args.maze)
+    
 
-    WINNER = run_experiment(config_file=config_path, maze_env=maze_env, trial_out_dir=trial_out_dir, n_generations=args.generations, args=args)  # Only relevant to look at the winner.
+
+
+    seed = 11111
+    random.seed(seed)
+    runs = 20
+    seeds = [random.random() for _ in range(runs)]
+    for s in seeds:
+        output_file = 'des_hyperneat_normal_maze:' + args.maze + '_seed:' + str(s) + '_generations: ' + str(args.generations) + '.txt'
+        WINNER = run_experiment(config_file=config_path, maze_env=maze_env, trial_out_dir=trial_out_dir, n_generations=args.generations, args=args, seed=s, output_file=output_file)  # Only relevant to look at the winner.
     

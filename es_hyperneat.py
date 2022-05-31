@@ -6,7 +6,7 @@ import neat
 import numpy as np
 from hyperneat import query_cppn
 from visualize_cppn import draw_es
-
+import recurrent
 
 class ESNetwork:
     """
@@ -83,7 +83,7 @@ class ESNetwork:
             draw_es(coords_to_id, draw_connections, filename)
 
         # This is actually a feedforward network.
-        return neat.nn.RecurrentNetwork(input_nodes, output_nodes, node_evals)
+        return recurrent.RecurrentNetwork(input_nodes, output_nodes, node_evals)
 
     @staticmethod
     def get_weights(p):

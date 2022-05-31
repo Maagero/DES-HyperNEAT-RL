@@ -299,13 +299,12 @@ def maze_simulation_evaluate(env, net, time_steps, activations = 1):
             break
     # Calculate the fitness score based on distance from exit
     if env.waypoints:
-        fitness = env.agent_distance_to_waypoint(env.waypoints[0])
+        distance = env.agent_distance_to_waypoint(env.waypoints[0])
     else:
-        fitness = env.agent_distance_to_exit()
+        distance = env.agent_distance_to_exit()
     # Normalize fitness score to range (0,1]
-    fitness = (env.initial_distance - fitness) / env.initial_distance
-    if fitness <= 0.01:
-        fitness = 0.01
+    fitness = 1 - distance/250
+
     fitness = (fitness + (env.num_waypoints - len(env.waypoints)))
     return fitness
 

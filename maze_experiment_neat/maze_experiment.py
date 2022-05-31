@@ -84,19 +84,8 @@ def eval_fitness(genome, config, trialSim, time_steps=400):
                                         net=control_net, 
                                         time_steps=time_steps)
     # Store simulation results into the agent record
-    record = agent.AgentRecord(
-        generation=trialSim.population.generation,
-        agent_id=genome.key)
-    record.fitness = fitness
-    record.x = maze_env.agent.location.x
-    record.y = maze_env.agent.location.y
-    record.hit_exit = maze_env.exit_found
-    record.species_id = trialSim.population.species.get_species_id(genome.key)
-    record.species_age = record.generation - trialSim.population.species.get_species(genome.key).created
-    # add record to the store
-    trialSim.record_store.add_record(record)
 
-    return fitness
+    return fitness, genome.get_nodes_cppn(), genome.get_nodes_cppn()
 
 def eval_genomes(genomes, config):
     """

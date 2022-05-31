@@ -173,9 +173,12 @@ class DefaultGenome(object):
         # Fitness results.
         self.fitness = None
 
+        self.cppn_nodes_cons = (0, 0)
+        self.ann_nodes_cons = (0, 0)
+
     def configure_new(self, config):
         """Configure a new genome based on the given configuration."""
-
+        self.num_outputs = len(config.output_keys)
         # Create node genes for the output pins.
         for node_key in config.output_keys:
             self.nodes[node_key] = self.create_node(config, node_key)
@@ -243,20 +246,20 @@ class DefaultGenome(object):
             self.nodes[x_node.key] = x_node
             self.nodes[y_node.key] = y_node
 
-            self.add_connection(config, config.input_keys[0], x_node.key, 0.33, True)
-            self.add_connection(config, config.input_keys[2], x_node.key, 0.33, True)
-            self.add_connection(config, config.input_keys[1], y_node.key, 0.33, True)
-            self.add_connection(config, config.input_keys[3], y_node.key, 0.33, True)
+            self.add_connection(config, config.input_keys[0], x_node.key, 1.0, True)
+            self.add_connection(config, config.input_keys[2], x_node.key, -1.0, True)
+            self.add_connection(config, config.input_keys[1], y_node.key, 1.0, True)
+            self.add_connection(config, config.input_keys[3], y_node.key, -1.0, True)
             if config.num_inputs == 5:
-                self.add_connection(config, config.input_keys[4], y_node.key, 0.33, True)
-            for key in config.output_keys:
-                self.add_connection(config, x_node.key, key, 0.33, True)
-                self.add_connection(config, y_node.key, key, 0.33, True)
+                self.add_connection(config, config.input_keys[4], y_node.key, 1.0, True)
+            self.add_connection(config, x_node.key, config.output_keys[1], -1.0, True)
+            self.add_connection(config, y_node.key, config.output_keys[0], 1.0, True)
 
 
 
     def configure_crossover(self, genome1, genome2, config):
         """ Configure a new genome by crossover from two parent genomes. """
+        self.num_outputs = genome1.num_outputs
         if genome1.fitness != None and genome1.fitness > genome2.fitness:
             parent1, parent2 = genome1, genome2
         else:
@@ -467,13 +470,16 @@ class DefaultGenome(object):
         distance = node_distance + connection_distance
         return distance
 
+    def get_nodes_cppn(self):
+        return (self.size())
+
     def size(self):
         """
         Returns genome 'complexity', taken to be
         (number of nodes, number of enabled connections)
         """
         num_enabled_connections = sum([1 for cg in self.connections.values() if cg.enabled])
-        return len(self.nodes), num_enabled_connections
+        return len(self.nodes)-self.num_outputs, num_enabled_connections
 
     def __str__(self):
         s = "Key: {0}\nFitness: {1}\nNodes:".format(self.key, self.fitness)

@@ -35,7 +35,7 @@ def draw_net(net, filename=None, node_names={}, node_colors={}):
         node_attrs = {'style': 'filled',
                       'fillcolor': node_colors.get(k, 'lightblue')}
         dot.node(name, _attributes=node_attrs)
-
+    print(net.node_evals)
     for node, _, _, _, _, links in net.node_evals:
         for i, w in links:
             node_input, output = node, i
